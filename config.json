@@ -1,0 +1,44 @@
+{
+  "puerto": 4000,
+  "host": "127.0.0.1",
+  "maxDiasPorConsulta": 31,
+  "horasSesion": 12,
+  "cruzDelSur": {
+    "consultasSimultaneas": 2,
+    "espacioEntreConsultasMs": 1000,
+    "pausaAnte429Ms": 15000,
+    "esperaReintentoMs": 10000
+  },
+  "peruBus": {
+    "activo": true,
+    "capacidad": {
+      "default": 46
+    }
+  },
+  "rutas": [
+    {
+      "id": "lima-ica",
+      "nombre": "Lima → Ica",
+      "cds": [
+        "lima",
+        "ica"
+      ],
+      "pb": [
+        "lima",
+        "ica"
+      ]
+    },
+    {
+      "id": "ica-lima",
+      "nombre": "Ica → Lima",
+      "cds": [
+        "ica",
+        "lima"
+      ],
+      "pb": [
+        "ica",
+        "lima"
+      ]
+    }
+  ]
+}

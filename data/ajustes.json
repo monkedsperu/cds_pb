@@ -1,0 +1,28 @@
+{
+  "servicios": {
+    "cds": {
+      "Evolution": true,
+      "Suite": true,
+      "Confort Suite": false,
+      "Ica Express": false,
+      "Ica Eco Express": false,
+      "Cruzero Plus": false,
+      "Confort": false
+    },
+    "pb": {
+      "Servicio Vip": true,
+      "Express": false,
+      "Express Paracas": false,
+      "Salon Cama": false
+    }
+  },
+  "permitirRangoUsuarios": false,
+  "auto": {
+    "activa": false,
+    "hora": "06:00",
+    "desdeDias": 1,
+    "cantidadDias": 1,
+    "ultima": null,
+    "ultimoResultado": null
+  }
+}

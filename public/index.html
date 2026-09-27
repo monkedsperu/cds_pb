@@ -1,0 +1,546 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Monitor Lima ⇄ Ica · Cruz del Sur vs Peru Bus</title>
+<style>
+  :root{
+    --cds:#0B2D63; --cds-2:#FFC20E; --cds-soft:#E7EDF7;
+    --pb:#8E1B1B;  --pb-2:#D9534F; --pb-soft:#F7E6E5;
+    --ok:#E3F1DF; --ink:#1d2330; --muted:#667085; --line:#E4E7EC; --bg:#F5F6F8; --card:#fff;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;color:var(--ink);background:var(--bg)}
+  header{background:linear-gradient(90deg,var(--cds) 0 50%,var(--pb) 50% 100%);color:#fff;padding:16px 24px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+  header h1{font-size:20px;margin:0}
+  .tag{font-size:12px;padding:3px 10px;border-radius:99px;font-weight:700}
+  .t-cds{background:var(--cds-2);color:var(--cds)} .t-pb{background:#fff;color:var(--pb)}
+  main{max-width:1200px;margin:0 auto;padding:20px 16px 60px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:16px}
+  .controles{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end}
+  label.campo{display:flex;flex-direction:column;font-size:12px;color:var(--muted);gap:4px;font-weight:600}
+  input[type=date],select{font:inherit;padding:8px 10px;border:1px solid var(--line);border-radius:8px;min-width:160px;background:#fff}
+  button{font:inherit;font-weight:600;border:0;border-radius:8px;padding:10px 16px;cursor:pointer}
+  .btn-main{background:var(--cds);color:#fff} .btn-main:disabled{opacity:.5;cursor:wait}
+  .btn-sec{background:#fff;border:1px solid var(--line);color:var(--ink)} .btn-sec:disabled{opacity:.5}
+  .switch{display:inline-flex;background:#EEF0F3;border-radius:10px;padding:3px}
+  .switch button{background:transparent;padding:8px 14px;border-radius:8px;color:var(--muted)}
+  .switch button.on{background:#fff;color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.12)}
+  .oculto{display:none!important}
+  /* progreso */
+  #progreso{margin-top:14px}
+  .pbar{height:14px;background:#EEF0F3;border-radius:99px;overflow:hidden}
+  .pbar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--cds),var(--pb));transition:width .4s}
+  .pinfo{display:flex;justify-content:space-between;font-size:13px;margin-top:6px;color:var(--muted)}
+  .pinfo b{color:var(--ink)}
+  #log{font:12px/1.5 ui-monospace,Consolas,monospace;background:#0f172a;color:#cbd5e1;border-radius:8px;padding:10px 12px;max-height:160px;overflow:auto;white-space:pre-wrap;margin-top:8px}
+  .linkbtn{background:none;padding:0;color:var(--cds);font-size:12px;text-decoration:underline}
+  /* tabs */
+  .tabs{display:flex;gap:4px;border-bottom:2px solid var(--line);margin:8px 0 16px}
+  .tabs button{background:none;border-radius:8px 8px 0 0;padding:12px 20px;font-size:16px;color:var(--muted);border-bottom:3px solid transparent;margin-bottom:-2px}
+  .tabs button.on{color:var(--ink);border-bottom-color:var(--cds);background:#fff}
+  /* kpis */
+  .kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:16px}
+  @media (max-width:860px){.kpis{grid-template-columns:1fr}}
+  .kpi{border-radius:12px;padding:14px 16px;color:#fff}
+  .kpi.cds{background:var(--cds);border-bottom:5px solid var(--cds-2)}
+  .kpi.pb{background:var(--pb);border-bottom:5px solid var(--pb-2)}
+  .kpi.cmp{background:#fff;color:var(--ink);border:1px solid var(--line)}
+  .kpi h3{margin:0 0 10px;font-size:13px;letter-spacing:.03em;text-transform:uppercase}
+  .kpi .fila{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+  .kpi.cmp .fila{grid-template-columns:repeat(3,1fr)}
+  .kpi .v{font-size:24px;font-weight:800;line-height:1.1}
+  .kpi .l{font-size:11px;opacity:.8}
+  .barra{height:8px;background:rgba(255,255,255,.25);border-radius:99px;margin-top:10px;overflow:hidden}
+  .barra i{display:block;height:100%} .cds .barra i{background:var(--cds-2)} .pb .barra i{background:#fff}
+  [data-tip]{cursor:help}
+  .kpi [data-tip]{border-bottom:1px dashed rgba(255,255,255,.6)}
+  td[data-tip]{text-decoration:underline dotted #98a2b3;text-underline-offset:3px}
+  /* tooltip */
+  #tip{position:fixed;z-index:50;pointer-events:none;background:#fff;color:var(--ink);border:1px solid var(--line);border-radius:10px;box-shadow:0 8px 24px rgba(16,24,40,.18);padding:10px 12px;font-size:12px;max-width:340px;display:none}
+  #tip h4{margin:0 0 6px;font-size:13px}
+  #tip table{font-size:12px} #tip td,#tip th{padding:2px 6px;border:0;text-align:left;background:none!important;color:var(--ink);position:static;text-transform:none;font-size:12px}
+  #tip td.n{text-align:right;font-weight:700}
+  #tip .sub{color:var(--muted);font-weight:700;margin-top:6px;font-size:11px;text-transform:uppercase}
+  /* gráficos y tablas */
+  .grafico{overflow-x:auto}
+  .leyenda{display:flex;gap:16px;font-size:13px;margin-bottom:6px;align-items:center;flex-wrap:wrap}
+  .leyenda b{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+  h3.sec{margin:0 0 10px;font-size:16px}
+  table{border-collapse:collapse;width:100%;font-size:13px}
+  th,td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:center;white-space:nowrap}
+  th{font-size:11px;text-transform:uppercase;color:#fff;position:sticky;top:0;z-index:1}
+  th.cds{background:var(--cds)} th.pb{background:var(--pb)} th.gen{background:#475467}
+  td.cds{background:var(--cds-soft)} td.pb{background:var(--pb-soft)}
+  tr.coinc td{background:var(--ok)!important;font-weight:600}
+  tr.clic{cursor:pointer} tr.clic:hover td{filter:brightness(.96)} tr.sel td{outline:2px solid var(--cds);outline-offset:-2px}
+  .pos{color:var(--pb);font-weight:700} .neg{color:var(--cds);font-weight:700}
+  .tabla-wrap{max-height:520px;overflow:auto;border:1px solid var(--line);border-radius:8px}
+  details summary{cursor:pointer;font-weight:600;padding:8px 0}
+  .dup td{color:#98a2b3;font-style:italic}
+  .aviso{background:#FFF7E0;border:1px solid #F5D97A;color:#7A5B00;border-radius:8px;padding:8px 12px;font-size:13px;margin:0 0 12px}
+  .vacio{color:var(--muted);text-align:center;padding:40px}
+  .pill{display:inline-block;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:700}
+  .pill.cds{background:var(--cds);color:var(--cds-2)} .pill.pb{background:var(--pb);color:#fff}
+  .diabar{display:flex;align-items:center;gap:10px;margin:22px 0 12px;flex-wrap:wrap}
+  .diabar h2{margin:0;font-size:19px}
+  footer{color:var(--muted);font-size:12px;margin-top:24px}
+  .hdr-der{margin-left:auto;display:flex;gap:8px}
+  .icono{background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.35);padding:7px 12px;font-size:14px}
+  .icono:hover{background:rgba(255,255,255,.28)}
+  .modal{position:fixed;inset:0;background:rgba(15,23,42,.55);display:grid;place-items:center;z-index:60;padding:16px}
+  .modal .caja{background:#fff;border-radius:14px;padding:20px;width:100%;max-width:520px}
+  .modal h3{margin:0 0 12px}
+  .modal label.campo{display:block} .modal textarea{margin-top:6px}
+  .estado-token{font-size:14px;margin-bottom:12px;padding:10px 12px;border-radius:8px;background:#F2F4F7}
+  .estado-token.ok{background:#E3F1DF} .estado-token.no{background:#FDECEC}
+  .modal textarea{width:100%;font:12px ui-monospace,Consolas,monospace;padding:10px;border:1px solid var(--line);border-radius:8px;min-height:80px}
+  .modal .acciones{display:flex;gap:8px;justify-content:flex-end;margin-top:12px;flex-wrap:wrap}
+  .ayuda{font-size:12px;color:var(--muted);margin:8px 0 0}
+  #msgToken{font-size:13px;margin-top:10px;min-height:18px}
+  .btn-cancel{background:#fff;border:1px solid #F2B8B5;color:var(--pb);padding:4px 10px;font-size:12px;margin-left:10px}
+  .sindato{color:#B54708;font-weight:700}
+  .cfgtabs{margin:0 0 14px} .cfgtabs button{font-size:14px;padding:8px 12px}
+  .servs{display:grid;grid-template-columns:1fr 1fr;gap:16px} @media (max-width:560px){.servs{grid-template-columns:1fr}}
+  .servtit{font-weight:700;font-size:13px;padding:6px 10px;border-radius:8px;color:#fff;margin-bottom:6px}
+  .servtit.cds{background:var(--cds)} .servtit.pb{background:var(--pb)}
+  .servs label{display:flex;gap:8px;align-items:center;padding:5px 4px;font-size:14px;cursor:pointer}
+  .servs .todos{font-size:12px;color:var(--muted)}
+  .msg{font-size:13px;margin-top:10px;min-height:18px}
+  .claves{display:flex;flex-direction:column;gap:6px;max-height:240px;overflow:auto;margin-bottom:10px}
+  .claves .fila{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:8px;padding:6px 10px}
+  .claves code{flex:1;font-size:13px}
+  .claves button{padding:4px 10px;font-size:12px}
+  .btn-del{background:#fff;border:1px solid #F2B8B5;color:var(--pb)}
+  .nueva{display:flex;gap:8px} .nueva input{flex:1;font:inherit;padding:8px 10px;border:1px solid var(--line);border-radius:8px}
+  .rolpill{font-size:11px;background:var(--cds-2);color:var(--cds);padding:2px 8px;border-radius:99px;font-weight:700;align-self:center}
+  .svbloque{margin-top:10px;display:flex;flex-direction:column;gap:6px}
+  .svfila{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+  .svtxt{font-size:12px;color:var(--muted);margin-right:4px;min-width:110px}
+  .chip{font-size:12px;padding:2px 9px;border-radius:99px;border:1px solid}
+  .chip.cds{border-color:#B9C6DD;background:var(--cds-soft);color:var(--cds)}
+  .chip.pb{border-color:#EBC1BF;background:var(--pb-soft);color:var(--pb)}
+  .chip.off{border-color:var(--line);color:#98a2b3;text-decoration:line-through;background:#fff}
+  .autogrid{display:flex;gap:12px;flex-wrap:wrap;margin:12px 0} .autogrid input,.autogrid select{min-width:120px}
+  .permiso{display:flex;gap:10px;align-items:flex-start;font-size:14px;cursor:pointer} .permiso input{margin-top:4px}
+</style>
+</head>
+<body>
+<header>
+  <h1>Monitor Lima ⇄ Ica</h1>
+  <span class="tag t-cds">Cruz del Sur</span><span class="tag t-pb">Peru Bus</span>
+  <div class="hdr-der"><button class="icono" id="btnCfg" title="Configuración">⚙ Configuración</button><button class="icono" id="btnSalir" title="Cerrar sesión">Salir</button></div>
+</header>
+<main>
+  <section class="card">
+    <div class="controles">
+      <label class="campo">Buscar por
+        <span class="switch" id="modo"><button data-m="dia" class="on">Un día</button><button data-m="rango" id="btnModoRango" class="oculto">Rango de fechas</button></span>
+      </label>
+      <label class="campo" id="cDia">Fecha de viaje<input type="date" id="fecha"></label>
+      <label class="campo oculto" id="cDesde">Desde<input type="date" id="desde"></label>
+      <label class="campo oculto" id="cHasta">Hasta<input type="date" id="hasta"></label>
+      <button class="btn-main" id="btnGenerar">Generar reporte</button>
+      <label class="campo">Reportes guardados<select id="historial"><option value="">— elegir —</option></select></label>
+      <button class="btn-sec soloadminb oculto" id="btnBorrarRep" disabled title="Eliminar el reporte seleccionado">🗑</button>
+      <button class="btn-sec" id="btnCsv" disabled>Exportar CSV</button>
+      <button class="btn-sec" id="btnExcel" disabled>⬇ Descargar Excel</button>
+      <button class="btn-sec" id="btnJson" disabled title="Datos completos del reporte en JSON">JSON</button>
+    </div>
+    <div id="progreso" class="oculto">
+      <div class="pbar"><i id="pfill"></i></div>
+      <div class="pinfo"><span id="ppaso">Iniciando…</span><b id="ppct">0%</b></div>
+      <button class="linkbtn" id="verLog">ver registro</button><button class="btn-cancel" id="btnCancelar">Cancelar consulta</button>
+      <div id="log" class="oculto"></div>
+    </div>
+  </section>
+  <section id="reporte"><div class="card vacio">Elige una fecha (o un rango) y pulsa <b>Generar reporte</b>, o abre un reporte guardado.</div></section>
+  <footer>Vendidos = asientos que la web de cada empresa muestra como ocupados al momento de la consulta. Cruz del Sur: mapa de asientos de cada salida (todos los pisos y tarifas). Peru Bus: capacidad del bus − "asientos restantes". Pasa el cursor sobre los vendidos para ver el desglose.</footer>
+</main>
+<div id="tip"></div>
+<div class="modal oculto" id="modalCfg"><div class="caja">
+  <h3>⚙ Configuración</h3>
+  <div class="tabs cfgtabs"><button data-cfg="serv" class="on">Servicios a consultar</button><button data-cfg="token" class="soloadmin">Token Cruz del Sur</button><button data-cfg="claves" class="soloadmin">Contraseñas</button><button data-cfg="permisos" class="soloadmin">Permisos</button><button data-cfg="auto" class="soloadmin">Automático</button></div>
+
+  <div data-panel="serv">
+    <p class="ayuda" style="margin-top:0">Solo se consultan los servicios marcados. Menos servicios = menos consultas a Cruz del Sur = reporte más rápido. La selección se guarda en el servidor y vale para todos.</p>
+    <div class="servs"><div><div class="servtit cds">Cruz del Sur</div><div id="servCds"></div></div><div><div class="servtit pb">Peru Bus</div><div id="servPb"></div></div></div>
+    <div id="msgServ" class="msg"></div>
+    <div class="acciones"><button class="btn-sec" data-cerrar>Cerrar</button><button class="btn-main" id="btnGuardarServ">Guardar selección</button></div>
+  </div>
+
+  <div data-panel="token" class="oculto">
+    <div class="estado-token" id="estadoToken">Cargando…</div>
+    <label class="campo">Nuevo token (valor del encabezado <i>authorization</i>)
+      <textarea id="nuevoToken" placeholder="Token token=xxxxxxxxxxxxxxxx"></textarea></label>
+    <p class="ayuda">Cómo obtenerlo: abre viajes.cruzdelsur.com.pe, busca un viaje, pulsa F12 → pestaña Red (Network) → filtra “one-api” → abre una consulta → Request Headers → <b>authorization</b>. Copia el valor completo.</p>
+    <div id="msgToken" class="msg"></div>
+    <div class="acciones"><button class="btn-sec" id="btnProbarActual">Probar token actual</button><button class="btn-sec" data-cerrar>Cerrar</button><button class="btn-main" id="btnGuardarToken">Probar y guardar</button></div>
+  </div>
+
+  <div data-panel="permisos" class="oculto">
+    <label class="permiso"><input type="checkbox" id="chkRango"> <span><b>Permitir que los usuarios busquen por varios días</b><br><span class="ayuda">Si está desactivado, solo el administrador ve la opción “Rango de fechas”. Las búsquedas largas hacen muchas consultas a Cruz del Sur.</span></span></label>
+    <div id="msgPermisos" class="msg"></div>
+    <div class="acciones"><button class="btn-sec" data-cerrar>Cerrar</button></div>
+  </div>
+
+  <div data-panel="auto" class="oculto">
+    <p class="ayuda" style="margin-top:0">El servidor genera y guarda un reporte todos los días a la hora indicada (hora de Lima), sin que nadie tenga que entrar. Así se va armando un historial. Los reportes automáticos aparecen con ⏱ en “Reportes guardados”.</p>
+    <label class="permiso"><input type="checkbox" id="autoActiva"> <b>Activar consulta automática diaria</b></label>
+    <div class="autogrid">
+      <label class="campo">Hora<input type="time" id="autoHora"></label>
+      <label class="campo">Consultar desde<select id="autoDesde"><option value="0">hoy</option><option value="1">mañana</option><option value="2">pasado mañana</option><option value="7">dentro de 7 días</option></select></label>
+      <label class="campo">Cantidad de días<input type="number" id="autoCant" min="1" max="31"></label>
+    </div>
+    <div class="estado-token" id="autoEstado"></div>
+    <div id="msgAuto" class="msg"></div>
+    <div class="acciones"><button class="btn-sec" data-cerrar>Cerrar</button><button class="btn-main" id="btnGuardarAuto">Guardar</button></div>
+  </div>
+
+  <div data-panel="claves" class="oculto">
+    <p class="ayuda" style="margin-top:0">Contraseñas de usuarios (se guardan en el archivo .env del servidor). Al eliminar una, se cierran las sesiones abiertas con ella. La contraseña de administrador solo se cambia editando .env.</p>
+    <div id="listaClaves" class="claves"></div>
+    <div class="nueva"><input type="text" id="nuevaClave" placeholder="Nueva contraseña (mín. 6, sin espacios ni comas)" autocomplete="off"><button class="btn-sec" id="btnGenClave" title="Generar una al azar">🎲</button><button class="btn-main" id="btnAgregarClave">Agregar</button></div>
+    <div id="msgClaves" class="msg"></div>
+    <div class="acciones"><button class="btn-sec" data-cerrar>Cerrar</button></div>
+  </div>
+</div></div>
+<script>
+const $ = (s) => document.querySelector(s);
+// Si la sesión venció, vuelve a la pantalla de bloqueo.
+const _fetch = window.fetch.bind(window);
+window.fetch = async (...a) => { const r = await _fetch(...a); if (r.status === 401) { try { const j = await r.clone().json(); if (j.login) location.href = '/login'; } catch(_){} } return r; };
+$('#btnSalir') && ($('#btnSalir').onclick = async () => { await fetch('/api/logout',{method:'POST'}); location.href='/login'; });
+const DIAS = ['dom','lun','mar','mié','jue','vie','sáb'];
+const DIAS_L = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+let rep = null, rutaSel = null, diaSel = null, modo = 'dia', MAXD = 31;
+
+// ---------------- controles ----------------
+const hoyLima = () => new Date(Date.now() - 5*36e5).toISOString().slice(0,10);
+const sumarDias = (f,n) => { const d=new Date(f+'T12:00:00Z'); d.setUTCDate(d.getUTCDate()+n); return d.toISOString().slice(0,10); };
+$('#fecha').value = sumarDias(hoyLima(),1); $('#desde').value = sumarDias(hoyLima(),1); $('#hasta').value = sumarDias(hoyLima(),7);
+document.querySelectorAll('#modo button').forEach(b => b.onclick = () => {
+  modo = b.dataset.m;
+  document.querySelectorAll('#modo button').forEach(x => x.classList.toggle('on', x===b));
+  $('#cDia').classList.toggle('oculto', modo!=='dia'); $('#cDesde').classList.toggle('oculto', modo==='dia'); $('#cHasta').classList.toggle('oculto', modo==='dia');
+});
+$('#verLog').onclick = () => $('#log').classList.toggle('oculto');
+
+fetch('/api/config').then(r=>r.json()).then(c=>{ MAXD=c.maxDias; ROL=c.rol; PERM_RANGO=c.permitirRangoUsuarios; $('#btnModoRango').classList.toggle('oculto', !c.permitirRango); if(ROL==='admin') $('#btnBorrarRep').classList.remove('oculto'); AUTO=c.auto; if(ROL==='admin') $('.hdr-der').insertAdjacentHTML('afterbegin','<span class="rolpill">ADMIN</span>'); if(c.enCurso) seguir(c.enCurso); });
+function cargarHistorial(sel){
+  fetch('/api/historial').then(r=>r.json()).then(l=>{
+    $('#historial').innerHTML = '<option value="">— elegir —</option>' + l.map(f=>`<option value="${f}" ${f===sel?'selected':''}>${f.startsWith('auto_')?'⏱ ':''}${f.replace(/^auto_/,'').replace(/\.json$/,'')}</option>`).join('');
+  });
+}
+cargarHistorial();
+$('#historial').onchange = e => { if(e.target.value) fetch('/api/historial/'+encodeURIComponent(e.target.value)).then(r=>r.json()).then(mostrar); };
+
+$('#btnGenerar').onclick = async () => {
+  const desde = modo==='dia' ? $('#fecha').value : $('#desde').value;
+  const hasta = modo==='dia' ? $('#fecha').value : $('#hasta').value;
+  const r = await fetch('/api/consultar',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({desde,hasta})});
+  const j = await r.json();
+  if(!r.ok && !j.id){ alert(j.error); return; }
+  seguir(j.id);
+};
+function seguir(id){
+  $('#btnGenerar').disabled = true; $('#btnGenerar').textContent = 'Consultando…';
+  $('#progreso').classList.remove('oculto');
+  const tick = async () => {
+    const e = await (await fetch('/api/estado/'+id)).json();
+    $('#pfill').style.width = (e.progreso||0)+'%'; $('#ppct').textContent = (e.progreso||0)+'%'; $('#ppaso').textContent = e.paso||'';
+    $('#log').textContent = (e.mensajes||[]).join('\n'); $('#log').scrollTop = 1e9;
+    if(e.estado==='corriendo') return setTimeout(tick, 1000);
+    $('#btnGenerar').disabled=false; $('#btnGenerar').textContent='Generar reporte';
+    if(e.estado==='listo'){ mostrar(e.resultado); cargarHistorial(e.resultado.archivo); setTimeout(()=>$('#progreso').classList.add('oculto'),1500); }
+    else { $('#ppaso').textContent = 'Error: '+e.error; $('#log').classList.remove('oculto'); }
+  };
+  tick();
+}
+
+// ---------------- configuración ----------------
+let ROL = 'usuario', PERM_RANGO = false, AUTO = null;
+const msg = (id, txt, ok) => { const m=$(id); m.style.color = ok===true?'#067647':ok===false?'var(--pb)':'var(--muted)'; m.textContent = txt; };
+function abrirPanel(n){
+  document.querySelectorAll('.cfgtabs button').forEach(b=>b.classList.toggle('on', b.dataset.cfg===n));
+  document.querySelectorAll('[data-panel]').forEach(p=>p.classList.toggle('oculto', p.dataset.panel!==n));
+  if(n==='permisos'){ $('#chkRango').checked = PERM_RANGO; msg('#msgPermisos',''); }
+  if(n==='auto') pintarAuto();
+  if(n==='serv') cargarServicios(); if(n==='token') cargarEstadoToken(); if(n==='claves') cargarClaves();
+}
+document.querySelectorAll('.cfgtabs button').forEach(b=>b.onclick=()=>abrirPanel(b.dataset.cfg));
+document.querySelectorAll('[data-cerrar]').forEach(b=>b.onclick=()=>$('#modalCfg').classList.add('oculto'));
+$('#btnCfg').onclick = () => { $('#modalCfg').classList.remove('oculto'); document.querySelectorAll('.soloadmin').forEach(b=>b.classList.toggle('oculto', ROL!=='admin')); abrirPanel('serv'); };
+
+async function cargarServicios(){
+  const a = await (await fetch('/api/ajustes')).json();
+  const pinta = (emp, cont) => { const e = Object.entries(a.servicios[emp]);
+    $(cont).innerHTML = `<label class="todos"><input type="checkbox" data-todos="${emp}"> Marcar / desmarcar todos</label>` +
+      e.map(([n,v])=>`<label><input type="checkbox" data-emp="${emp}" value="${n.replace(/"/g,'&quot;')}" ${v?'checked':''}> ${n}</label>`).join(''); };
+  pinta('cds','#servCds'); pinta('pb','#servPb');
+  document.querySelectorAll('[data-todos]').forEach(t=>{ const emp=t.dataset.todos; const cbs=[...document.querySelectorAll(`[data-emp="${emp}"]`)];
+    t.checked = cbs.every(c=>c.checked); t.onchange=()=>cbs.forEach(c=>c.checked=t.checked); });
+  msg('#msgServ','');
+}
+$('#btnGuardarServ').onclick = async () => {
+  const servicios = {cds:{},pb:{}}; document.querySelectorAll('[data-emp]').forEach(c=>servicios[c.dataset.emp][c.value]=c.checked);
+  const r = await fetch('/api/ajustes',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({servicios})});
+  const j = await r.json(); msg('#msgServ', r.ok ? '✔ Guardado. Se aplica en la próxima consulta.' : j.error, r.ok);
+};
+
+async function cargarEstadoToken(){
+  const t = await (await fetch('/api/token')).json(); const e = $('#estadoToken');
+  e.className = 'estado-token ' + (t.configurado ? 'ok' : 'no');
+  e.innerHTML = t.configurado ? `Token configurado · termina en <b>…${t.final}</b>${t.actualizado?` · .env modificado el ${new Date(t.actualizado).toLocaleString('es-PE')}`:''}` : '<b>No hay token configurado.</b> Cruz del Sur no se podrá consultar.';
+  msg('#msgToken','');
+}
+async function enviarToken(soloProbar){
+  msg('#msgToken','Probando con Cruz del Sur… (unos segundos)');
+  document.querySelectorAll('[data-panel=token] button').forEach(b=>b.disabled=true);
+  try {
+    const r = await fetch('/api/token',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({token: soloProbar ? '' : $('#nuevoToken').value, soloProbar})});
+    const j = await r.json();
+    msg('#msgToken', r.ok ? (j.guardado ? '✔ Guardado. ' : '✔ ') + j.detalle : j.error, r.ok);
+    if (r.ok && j.guardado) { $('#nuevoToken').value=''; cargarEstadoToken(); msg('#msgToken','✔ Guardado. '+j.detalle,true); }
+  } catch(e){ msg('#msgToken','Error: '+e.message,false); }
+  document.querySelectorAll('[data-panel=token] button').forEach(b=>b.disabled=false);
+}
+$('#btnGuardarToken').onclick = () => { if(!$('#nuevoToken').value.trim()){ msg('#msgToken','Pega el token primero.',false); return; } enviarToken(false); };
+$('#btnProbarActual').onclick = () => enviarToken(true);
+
+function pintarClaves(l){
+  $('#listaClaves').innerHTML = l.length ? l.map((c,i)=>`<div class="fila"><code>${c.replace(/</g,'&lt;')}</code><button class="btn-sec" data-copiar="${i}">Copiar</button><button class="btn-del" data-borrar="${i}">Eliminar</button></div>`).join('') : '<p class="ayuda">No hay contraseñas de usuario. Solo entra el administrador.</p>';
+  document.querySelectorAll('[data-copiar]').forEach(b=>b.onclick=()=>{ navigator.clipboard && navigator.clipboard.writeText(l[b.dataset.copiar]); msg('#msgClaves','Copiada.',true); });
+  document.querySelectorAll('[data-borrar]').forEach(b=>b.onclick=async()=>{ const c=l[b.dataset.borrar]; if(!confirm(`¿Eliminar la contraseña "${c}"? Quien la use ya no podrá entrar.`)) return;
+    const r = await fetch('/api/admin/claves',{method:'DELETE',headers:{'content-type':'application/json'},body:JSON.stringify({clave:c})}); const j=await r.json();
+    if(r.ok){ pintarClaves(j.claves); msg('#msgClaves',`✔ Eliminada${j.cerradas?` (${j.cerradas} sesión(es) cerradas)`:''}.`,true); } else msg('#msgClaves',j.error,false); });
+}
+async function cargarClaves(){ const r=await fetch('/api/admin/claves'); const j=await r.json(); if(r.ok) pintarClaves(j.claves); else msg('#msgClaves',j.error,false); }
+$('#btnAgregarClave').onclick = async () => {
+  const r = await fetch('/api/admin/claves',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({clave:$('#nuevaClave').value})});
+  const j = await r.json(); if(r.ok){ pintarClaves(j.claves); $('#nuevaClave').value=''; msg('#msgClaves','✔ Agregada.',true); } else msg('#msgClaves',j.error,false);
+};
+$('#chkRango').onchange = async () => {
+  const r = await fetch('/api/admin/permisos',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({permitirRangoUsuarios:$('#chkRango').checked})});
+  const j = await r.json(); if(r.ok){ PERM_RANGO=j.permitirRangoUsuarios; msg('#msgPermisos', PERM_RANGO?'✔ Los usuarios ya pueden buscar por varios días.':'✔ Solo el administrador puede buscar por varios días.', true); } else msg('#msgPermisos', j.error, false);
+};
+function pintarAuto(){
+  const a = AUTO || {activa:false,hora:'06:00',desdeDias:1,cantidadDias:1};
+  $('#autoActiva').checked = a.activa; $('#autoHora').value = a.hora; $('#autoDesde').value = String(a.desdeDias); $('#autoCant').value = a.cantidadDias;
+  $('#autoEstado').className = 'estado-token ' + (a.activa ? 'ok' : '');
+  $('#autoEstado').innerHTML = (a.activa ? `Activa: todos los días a las <b>${a.hora}</b>.` : 'Desactivada.') + (a.ultimoResultado ? `<br>Última: ${a.ultimoResultado}` : '');
+  msg('#msgAuto','');
+}
+$('#btnGuardarAuto').onclick = async () => {
+  const r = await fetch('/api/admin/auto',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({activa:$('#autoActiva').checked,hora:$('#autoHora').value,desdeDias:Number($('#autoDesde').value),cantidadDias:Number($('#autoCant').value)})});
+  const j = await r.json(); if(r.ok){ AUTO=j; pintarAuto(); msg('#msgAuto','✔ Guardado.',true); } else msg('#msgAuto',j.error,false);
+};
+$('#btnGenClave').onclick = () => { const a='abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789'; const v=new Uint32Array(10); crypto.getRandomValues(v); $('#nuevaClave').value=[...v].map(x=>a[x%a.length]).join(''); };
+
+$('#btnCancelar').onclick = async () => { if(confirm('¿Cancelar la consulta en curso?')) await fetch('/api/cancelar',{method:'POST'}); };
+
+// ---------------- tooltip ----------------
+const TIPS = []; const tip = (html) => { TIPS.push(html); return `data-tip="${TIPS.length-1}"`; };
+document.addEventListener('mousemove', e => {
+  const el = e.target.closest && e.target.closest('[data-tip]'); const t = $('#tip');
+  if(!el){ t.style.display='none'; return; }
+  t.innerHTML = TIPS[el.dataset.tip]; t.style.display='block';
+  const w=t.offsetWidth, h=t.offsetHeight;
+  t.style.left = Math.min(e.clientX+14, innerWidth-w-8)+'px';
+  t.style.top = (e.clientY+h+20 > innerHeight ? e.clientY-h-12 : e.clientY+14)+'px';
+});
+
+// ---------------- cálculos ----------------
+const cuenta = s => !s.duplicadoDe && s.vendidos != null;
+const pct = x => x==null ? '–' : Math.round(x*100)+'%';
+const soles = n => 'S/ '+Math.round(n).toLocaleString('es-PE');
+const fCorta = f => { const d=new Date(f+'T12:00:00'); return `${DIAS[d.getDay()]} ${f.slice(8,10)}/${f.slice(5,7)}`; };
+const fLarga = f => { const d=new Date(f+'T12:00:00'); return `${DIAS_L[d.getDay()]} ${d.toLocaleDateString('es-PE',{day:'numeric',month:'long',year:'numeric'})}`; };
+
+function resumen(salidas){
+  const v = salidas.filter(cuenta);
+  const vend = v.reduce((a,s)=>a+s.vendidos,0), cap = v.reduce((a,s)=>a+(s.capacidad||0),0);
+  return { salidas:v.length, vendidos:vend, capacidad:cap, ocup: cap? vend/cap : null, lista:v };
+}
+function desglose(salidas){
+  const serv = {}, tar = {}; let ingreso = 0, conTarifa = false;
+  salidas.filter(cuenta).forEach(s=>{
+    const k = s.servicio || '—'; serv[k] = serv[k] || {v:0,n:0,c:0}; serv[k].v += s.vendidos; serv[k].n++; serv[k].c += s.capacidad||0;
+    if(s.porTarifa){ conTarifa = true; Object.entries(s.porTarifa).forEach(([t,n])=>tar[t]=(tar[t]||0)+n); ingreso += s.ingresoEstimado||0; }
+  });
+  return { serv, tar, ingreso, conTarifa };
+}
+function tipVendidos(nombre, salidas, titulo){
+  const d = desglose(salidas), tot = salidas.filter(cuenta).reduce((a,s)=>a+s.vendidos,0);
+  let h = `<h4>${nombre} · ${titulo}: ${tot} vendidos</h4><div class="sub">Por servicio</div><table>`;
+  Object.entries(d.serv).sort((a,b)=>b[1].v-a[1].v).forEach(([k,x])=>{ h += `<tr><td>${k}</td><td class="n">${x.v}</td><td>${x.n} sal. · ${pct(x.c?x.v/x.c:null)}</td></tr>`; });
+  h += '</table>';
+  if(d.conTarifa){
+    h += '<div class="sub">Por tipo de asiento</div><table>';
+    Object.entries(d.tar).sort((a,b)=>b[1]-a[1]).forEach(([k,n])=>{ h += `<tr><td>${k}</td><td class="n">${n}</td></tr>`; });
+    h += `</table><div class="sub">Ingreso estimado${nombre==='Peru Bus'?' (precio mostrado por salida)':''}</div><b>${soles(d.ingreso)}</b>`;
+  }
+  return h;
+}
+function tipSalida(s){
+  let h = `<h4>${s.servicio} · ${s.hora} ${s.origen} → ${s.destino}</h4>${s.vendidos} vendidos de ${s.capacidad}`;
+  if(s.porTarifa){ h += '<div class="sub">Por tarifa</div><table>' + Object.entries(s.porTarifa).map(([k,n])=>`<tr><td>${k}</td><td class="n">${n}</td></tr>`).join('') + '</table>'; }
+  if(s.porPiso){ h += '<div class="sub">Por piso</div><table>' + Object.entries(s.porPiso).map(([k,n])=>`<tr><td>${k}</td><td class="n">${n}</td></tr>`).join('') + '</table>'; }
+  if(s.ingresoEstimado) h += `<div class="sub">Ingreso estimado</div><b>${soles(s.ingresoEstimado)}</b>`;
+  return h;
+}
+function porHora(cds, pb){
+  const m = new Map();
+  const add = (s,k)=>{ if(!cuenta(s)) return; const h=m.get(s.hora)||{hora:s.hora,cds:{n:0,v:0,c:0,l:[]},pb:{n:0,v:0,c:0,l:[]}}; h[k].n++; h[k].v+=s.vendidos; h[k].c+=s.capacidad||0; h[k].l.push(s); m.set(s.hora,h); };
+  cds.forEach(s=>add(s,'cds')); pb.forEach(s=>add(s,'pb'));
+  return [...m.values()].sort((a,b)=>a.hora.localeCompare(b.hora)).map(h=>({...h, coinc: h.cds.n>0 && h.pb.n>0}));
+}
+function comparar(cds,pb){ const hs=porHora(cds,pb), co=hs.filter(h=>h.coinc); return { horas:hs, co, dif: co.reduce((a,h)=>a+h.pb.v-h.cds.v,0) }; }
+
+// ---------------- piezas visuales ----------------
+function kpi(cls, titulo, r, tipHtml){
+  return `<div class="kpi ${cls}"><h3>${titulo}</h3><div class="fila">
+    <div><div class="v">${r.salidas}</div><div class="l">salidas</div></div>
+    <div><div class="v" ${tipHtml?tip(tipHtml):''}>${r.vendidos}</div><div class="l">vendidos</div></div>
+    <div><div class="v">${r.capacidad}</div><div class="l">capacidad</div></div>
+    <div><div class="v">${pct(r.ocup)}</div><div class="l">ocupación</div></div></div>
+    <div class="barra"><i style="width:${Math.round((r.ocup||0)*100)}%"></i></div></div>`;
+}
+function kpiCmp(c){
+  const g = c.dif>0?'<span class="pill pb">Peru Bus</span>':c.dif<0?'<span class="pill cds">Cruz del Sur</span>':'Empate';
+  return `<div class="kpi cmp"><h3>Horarios que coinciden</h3><div class="fila">
+    <div><div class="v">${c.co.length}</div><div class="l">horarios iguales</div></div>
+    <div><div class="v ${c.dif>0?'pos':c.dif<0?'neg':''}">${c.dif>0?'+':''}${c.dif}</div><div class="l">dif. vendidos (PB − CDS)</div></div>
+    <div><div class="v" style="font-size:15px;padding-top:6px">${c.co.length?g:'–'}</div><div class="l">vende más en esos horarios</div></div></div></div>`;
+}
+// grupos: [{etiqueta, cds:{v,c,n,l}, pb:{...}, coinc, clave}]
+function grafico(grupos, opts={}){
+  if(!grupos.length) return '<div class="vacio">Sin datos</div>';
+  const bw=opts.bw||11, gap=4, paso=bw*2+gap+(opts.sep||14), H=240, top=24, bottom=opts.bottom||42, left=38;
+  const max = Math.max(10, ...grupos.map(g=>Math.max(g.cds.v,g.pb.v)));
+  const esc = v => (H-top-bottom) * v / max, W = left + grupos.length*paso + 10;
+  let s = `<svg width="${Math.max(W,600)}" height="${H}" style="font:11px system-ui">`;
+  for(let i=0;i<=4;i++){ const v=Math.round(max*i/4), y=H-bottom-esc(v); s+=`<line x1="${left}" x2="${Math.max(W,600)}" y1="${y}" y2="${y}" stroke="#E4E7EC"/><text x="${left-6}" y="${y+4}" text-anchor="end" fill="#667085">${v}</text>`; }
+  grupos.forEach((g,i)=>{
+    const x = left + i*paso + 7;
+    if(g.coinc) s+=`<rect x="${x-5}" y="${top-16}" width="${bw*2+gap+10}" height="${H-bottom-top+16}" fill="#E3F1DF" rx="4"/>`;
+    if(g.sel) s+=`<rect x="${x-5}" y="${top-16}" width="${bw*2+gap+10}" height="${H-bottom-top+16}" fill="none" stroke="#0B2D63" stroke-width="2" rx="4"/>`;
+    [['cds','#0B2D63','Cruz del Sur'],['pb','#8E1B1B','Peru Bus']].forEach(([k,c,n],j)=>{
+      if(!g[k].n) return;
+      const hh=esc(g[k].v), xx=x+j*(bw+gap), y=H-bottom-hh;
+      const t = tipVendidos(n, g[k].l, g.etiqueta);
+      s+=`<rect x="${xx}" y="${y}" width="${bw}" height="${Math.max(hh,1)}" fill="${c}" rx="2" ${tip(t)} ${g.clave?`data-dia="${g.clave}" style="cursor:pointer"`:''}/>`;
+      s+=`<text x="${xx+bw/2}" y="${y-3}" text-anchor="middle" fill="${c}" font-size="9" font-weight="700">${g[k].v}</text>`;
+    });
+    s+=`<text transform="translate(${x+bw+2},${H-bottom+12}) rotate(-40)" text-anchor="end" fill="#344054">${g.etiqueta}</text>`;
+  });
+  return s+'</svg>';
+}
+const leyenda = `<div class="leyenda"><span><b style="background:var(--cds)"></b>Cruz del Sur</span><span><b style="background:var(--pb)"></b>Peru Bus</span><span><b style="background:var(--ok);border:1px solid #b7d9ae"></b>Salen a la misma hora</span></div>`;
+
+function detalle(salidas, cls){
+  if(!salidas.length) return '<p class="vacio">Sin salidas</p>';
+  return `<div class="tabla-wrap"><table><tr>${['Hora','Llega','Servicio','Origen','Destino','Precio','Capacidad','Libres','Vendidos','Ocup.','Nota'].map(h=>`<th class="${cls}">${h}</th>`).join('')}</tr>` +
+    salidas.map(s=>`<tr class="${s.duplicadoDe||s.vendidos==null?'dup':''}"><td>${s.hora}</td><td>${s.llegada||''}</td><td>${s.servicio||''}</td><td>${s.origen||''}</td><td>${s.destino||''}</td><td>${s.precio!=null?'S/ '+s.precio:''}</td><td>${s.capacidad??''}</td><td>${s.libres??''}</td><td ${s.porTarifa?tip(tipSalida(s)):''}>${s.vendidos==null?'<span class="sindato">sin dato</span>':`<b>${s.vendidos}</b>`}</td><td>${s.capacidad&&s.vendidos!=null?pct(s.vendidos/s.capacidad):''}</td><td style="text-align:left;white-space:normal;min-width:220px">${s.nota||''}</td></tr>`).join('') + '</table></div>';
+}
+
+// ---------------- vista de un día ----------------
+function vistaDia(dia, r, conKpis){
+  const c = comparar(r.cds.salidas, r.pb.salidas);
+  let h = '';
+  [['cds','Cruz del Sur'],['pb','Peru Bus']].forEach(([k,n])=>{ if(r[k].error) h+=`<div class="aviso"><b>${n}:</b> ${r[k].error}</div>`; });
+  const sd = r.cds.salidas.filter(s=>s.sinDato||(s.vendidos==null&&!s.duplicadoDe)).length;
+  if(sd) h += `<div class="aviso"><b>Cruz del Sur:</b> ${sd} salida(s) quedaron <b>sin dato</b> (la web limitó las consultas o no respondió). No se suman en los totales; puedes volver a generar el reporte más tarde.</div>`;
+  if(conKpis){
+    const rc=resumen(r.cds.salidas), rp=resumen(r.pb.salidas);
+    h += `<div class="kpis">${kpi('cds','Cruz del Sur',rc,tipVendidos('Cruz del Sur',r.cds.salidas,fCorta(dia.fecha)))}${kpi('pb','Peru Bus',rp,tipVendidos('Peru Bus',r.pb.salidas,fCorta(dia.fecha)))}${kpiCmp(c)}</div>`;
+  }
+  const grupos = c.horas.map(x=>({etiqueta:x.hora, cds:x.cds, pb:x.pb, coinc:x.coinc}));
+  h += `<div class="card"><h3 class="sec">Vendidos por hora de salida · ${fLarga(dia.fecha)}</h3>${leyenda}<div class="grafico">${grafico(grupos)}</div></div>`;
+  h += `<div class="card"><h3 class="sec">Comparación por hora de salida</h3><div class="tabla-wrap"><table>
+    <tr><th class="gen">Hora</th><th class="cds">CDS salidas</th><th class="cds">CDS vendidos</th><th class="cds">CDS capacidad</th><th class="pb">PB salidas</th><th class="pb">PB vendidos</th><th class="pb">PB capacidad</th><th class="gen">Diferencia (PB − CDS)</th></tr>` +
+    c.horas.map(x=>{ const d=x.pb.v-x.cds.v; return `<tr class="${x.coinc?'coinc':''}"><td><b>${x.hora}</b></td>
+      <td class="cds">${x.cds.n||''}</td><td class="cds" ${x.cds.n?tip(tipVendidos('Cruz del Sur',x.cds.l,x.hora)):''}>${x.cds.n?x.cds.v:''}</td><td class="cds">${x.cds.n?x.cds.c:''}</td>
+      <td class="pb">${x.pb.n||''}</td><td class="pb" ${x.pb.n?tip(tipVendidos('Peru Bus',x.pb.l,x.hora)):''}>${x.pb.n?x.pb.v:''}</td><td class="pb">${x.pb.n?x.pb.c:''}</td>
+      <td>${x.coinc?`<span class="${d>0?'pos':d<0?'neg':''}">${d>0?'+':''}${d}</span>`:''}</td></tr>`; }).join('') +
+    `</table></div>
+    <details><summary>Todas las salidas de Cruz del Sur (${r.cds.salidas.length})</summary>${detalle(r.cds.salidas,'cds')}</details>
+    <details><summary>Todas las salidas de Peru Bus (${r.pb.salidas.length})</summary>${detalle(r.pb.salidas,'pb')}</details></div>`;
+  return h;
+}
+
+// ---------------- vista de rango ----------------
+function vistaRango(rutaId){
+  const filas = rep.dias.map(d=>{ const r=d.rutas.find(x=>x.id===rutaId); return {d, r, rc:resumen(r.cds.salidas), rp:resumen(r.pb.salidas), c:comparar(r.cds.salidas,r.pb.salidas)}; });
+  const todasC = filas.flatMap(f=>f.r.cds.salidas), todasP = filas.flatMap(f=>f.r.pb.salidas);
+  const RC=resumen(todasC), RP=resumen(todasP);
+  const CO={co:filas.flatMap(f=>f.c.co), dif:filas.reduce((a,f)=>a+f.c.dif,0)};
+  const etiquetaR = `${fCorta(rep.desde)} a ${fCorta(rep.hasta)}`;
+  let h = `<div class="kpis">${kpi('cds','Cruz del Sur · rango',RC,tipVendidos('Cruz del Sur',todasC,etiquetaR))}${kpi('pb','Peru Bus · rango',RP,tipVendidos('Peru Bus',todasP,etiquetaR))}${kpiCmp(CO)}</div>`;
+  const grupos = filas.map(f=>({etiqueta:fCorta(f.d.fecha), clave:f.d.fecha, sel:f.d.fecha===diaSel,
+    cds:{n:f.rc.salidas,v:f.rc.vendidos,c:f.rc.capacidad,l:f.rc.lista}, pb:{n:f.rp.salidas,v:f.rp.vendidos,c:f.rp.capacidad,l:f.rp.lista}, coinc:false}));
+  h += `<div class="card"><h3 class="sec">Vendidos por día · ${etiquetaR}</h3><div class="leyenda"><span><b style="background:var(--cds)"></b>Cruz del Sur</span><span><b style="background:var(--pb)"></b>Peru Bus</span><span style="color:var(--muted)">Haz clic en un día para ver su detalle por hora</span></div><div class="grafico">${grafico(grupos,{bw:16,sep:20})}</div></div>`;
+  h += `<div class="card"><h3 class="sec">Resumen por día</h3><div class="tabla-wrap"><table>
+    <tr><th class="gen">Fecha</th><th class="cds">CDS salidas</th><th class="cds">CDS vendidos</th><th class="cds">CDS ocup.</th><th class="pb">PB salidas</th><th class="pb">PB vendidos</th><th class="pb">PB ocup.</th><th class="gen">Horarios iguales</th><th class="gen">Dif. en esos horarios</th></tr>` +
+    filas.map(f=>`<tr class="clic ${f.d.fecha===diaSel?'sel':''}" data-dia="${f.d.fecha}"><td><b>${fCorta(f.d.fecha)}</b></td>
+      <td class="cds">${f.rc.salidas}</td><td class="cds" ${tip(tipVendidos('Cruz del Sur',f.r.cds.salidas,fCorta(f.d.fecha)))}>${f.rc.vendidos}</td><td class="cds">${pct(f.rc.ocup)}</td>
+      <td class="pb">${f.rp.salidas}</td><td class="pb" ${tip(tipVendidos('Peru Bus',f.r.pb.salidas,fCorta(f.d.fecha)))}>${f.rp.vendidos}</td><td class="pb">${pct(f.rp.ocup)}</td>
+      <td>${f.c.co.length}</td><td><span class="${f.c.dif>0?'pos':f.c.dif<0?'neg':''}">${f.c.co.length?(f.c.dif>0?'+':'')+f.c.dif:''}</span></td></tr>`).join('') +
+    `<tr><td><b>Total</b></td><td class="cds"><b>${RC.salidas}</b></td><td class="cds"><b>${RC.vendidos}</b></td><td class="cds"><b>${pct(RC.ocup)}</b></td><td class="pb"><b>${RP.salidas}</b></td><td class="pb"><b>${RP.vendidos}</b></td><td class="pb"><b>${pct(RP.ocup)}</b></td><td><b>${CO.co.length}</b></td><td><b>${CO.dif>0?'+':''}${CO.dif}</b></td></tr></table></div></div>`;
+  const dia = rep.dias.find(d=>d.fecha===diaSel) || rep.dias[0];
+  h += `<div class="diabar"><h2>Detalle del día</h2><select id="selDia">${rep.dias.map(d=>`<option value="${d.fecha}" ${d.fecha===dia.fecha?'selected':''}>${fLarga(d.fecha)}</option>`).join('')}</select></div>`;
+  h += vistaDia(dia, dia.rutas.find(x=>x.id===rutaId), true);
+  return h;
+}
+
+// ---------------- render ----------------
+function mostrar(r){
+  rep = r; $('#btnExcel').disabled = !r.archivo; $('#btnJson').disabled = !r.archivo; $('#btnCsv').disabled = false; $('#btnBorrarRep').disabled = !r.archivo;
+  rutaSel = rutaSel || rep.dias[0].rutas[0].id; diaSel = rep.dias[0].fecha;
+  pintar();
+}
+function bloqueServicios(sv){
+  if(!sv) return '';
+  const norm = x => Array.isArray(x) ? {incluidos:x, excluidos:[]} : (x||{incluidos:[],excluidos:[]});
+  const fila = (k, nombre, x) => { x = norm(x);
+    const todos = !x.excluidos.length;
+    return `<div class="svfila"><span class="pill ${k}">${nombre}</span><span class="svtxt">${todos?'Todos los servicios':`${x.incluidos.length} de ${x.incluidos.length+x.excluidos.length} servicios`}</span>
+      ${x.incluidos.map(s=>`<span class="chip ${k}">${s}</span>`).join('')}${x.excluidos.map(s=>`<span class="chip off" title="No incluido en este reporte">${s}</span>`).join('')}</div>`; };
+  return `<div class="svbloque">${fila('cds','Cruz del Sur',sv.cds)}${fila('pb','Peru Bus',sv.pb)}</div>`;
+}
+function pintar(){
+  TIPS.length = 0;
+  const uno = rep.dias.length === 1;
+  const rutas = rep.dias[0].rutas;
+  if(!rutas.find(x=>x.id===rutaSel)) rutaSel = rutas[0].id;
+  let h = `<div class="card"><b>${uno ? 'Reporte del '+fLarga(rep.desde) : `Reporte del ${fLarga(rep.desde)} al ${fLarga(rep.hasta)} (${rep.dias.length} días)`}</b> · datos tomados el ${new Date(rep.generado).toLocaleString('es-PE')}${bloqueServicios(rep.servicios)}</div>`;
+  h += `<div class="tabs">${rutas.map(x=>`<button data-ruta="${x.id}" class="${x.id===rutaSel?'on':''}">${x.nombre}</button>`).join('')}</div>`;
+  h += uno ? vistaDia(rep.dias[0], rep.dias[0].rutas.find(x=>x.id===rutaSel), true) : vistaRango(rutaSel);
+  $('#reporte').innerHTML = h;
+  document.querySelectorAll('#reporte .tabs button').forEach(b=>b.onclick=()=>{ rutaSel=b.dataset.ruta; pintar(); });
+  document.querySelectorAll('[data-dia]').forEach(el=>el.addEventListener('click',()=>{ diaSel=el.dataset.dia; pintar(); $('.diabar') && $('.diabar').scrollIntoView({behavior:'smooth'}); }));
+  const sd = $('#selDia'); if(sd) sd.onchange = () => { diaSel = sd.value; pintar(); $('.diabar').scrollIntoView(); };
+}
+
+$('#btnExcel').onclick = () => { if(rep && rep.archivo) location.href = '/api/excel/' + encodeURIComponent(rep.archivo); };
+$('#btnJson').onclick = () => { if(rep && rep.archivo) location.href = '/api/historial/' + encodeURIComponent(rep.archivo) + '?descargar=1'; };
+$('#btnCsv').onclick = () => {
+  if(!rep) return;
+  const filas = [['Fecha','Ruta','Empresa','Hora','Llegada','Servicio','Origen','Destino','Precio','Capacidad','Libres','Vendidos','Vendidos por tipo de asiento','Ingreso estimado','Se suma','Nota']];
+  rep.dias.forEach(d=>d.rutas.forEach(r=>[['cds','Cruz del Sur'],['pb','Peru Bus']].forEach(([k,n])=>r[k].salidas.forEach(s=>
+    filas.push([d.fecha,r.nombre,n,s.hora,s.llegada,s.servicio,s.origen,s.destino,s.precio,s.capacidad,s.libres,s.vendidos,
+      s.porTarifa?Object.entries(s.porTarifa).map(([t,c])=>`${t}: ${c}`).join(' | '):'', s.ingresoEstimado??'', cuenta(s)?'Sí':'No', s.nota])))));
+  const csv = '﻿' + filas.map(f=>f.map(v=>`"${String(v??'').replace(/"/g,'""')}"`).join(';')).join('\r\n');
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+  a.download = `reporte_${rep.desde}${rep.desde!==rep.hasta?'_a_'+rep.hasta:''}.csv`; a.click();
+};
+$('#btnBorrarRep').onclick = async () => {
+  if(!rep || !rep.archivo || !confirm(`¿Eliminar definitivamente el reporte "${rep.archivo}"?`)) return;
+  const r = await fetch('/api/admin/reportes/' + encodeURIComponent(rep.archivo), {method:'DELETE'});
+  if(r.ok){ rep = null; $('#reporte').innerHTML = '<div class="card vacio">Reporte eliminado.</div>'; ['#btnExcel','#btnJson','#btnCsv','#btnBorrarRep'].forEach(b=>$(b).disabled=true); cargarHistorial(); }
+  else alert((await r.json()).error);
+};
+</script>
+</body>
+</html>

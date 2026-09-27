@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Monitor Lima ⇄ Ica · Acceso</title>
+<style>
+  :root{--cds:#0B2D63;--cds-2:#FFC20E;--pb:#8E1B1B;--line:#E4E7EC;--muted:#667085}
+  *{box-sizing:border-box}
+  body{margin:0;min-height:100vh;display:grid;place-items:center;font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+       background:linear-gradient(120deg,var(--cds) 0 50%,var(--pb) 50% 100%);padding:16px}
+  .caja{background:#fff;border-radius:16px;padding:28px 26px;width:100%;max-width:360px;box-shadow:0 20px 50px rgba(0,0,0,.3)}
+  h1{margin:0 0 4px;font-size:22px;color:#1d2330}
+  p{margin:0 0 20px;color:var(--muted);font-size:14px}
+  .tags{display:flex;gap:6px;margin-bottom:18px}
+  .tag{font-size:11px;padding:3px 10px;border-radius:99px;font-weight:700}
+  .t1{background:var(--cds);color:var(--cds-2)} .t2{background:var(--pb);color:#fff}
+  label{font-size:12px;font-weight:600;color:var(--muted)}
+  input{width:100%;font:inherit;padding:11px 12px;border:1px solid var(--line);border-radius:8px;margin:6px 0 14px}
+  input:focus{outline:2px solid var(--cds);border-color:transparent}
+  button{width:100%;font:inherit;font-weight:700;border:0;border-radius:8px;padding:12px;background:var(--cds);color:#fff;cursor:pointer}
+  button:disabled{opacity:.6}
+  #err{color:var(--pb);font-size:13px;min-height:18px;margin-top:10px}
+</style>
+</head>
+<body>
+  <form class="caja" id="f">
+    <div class="tags"><span class="tag t1">Cruz del Sur</span><span class="tag t2">Peru Bus</span></div>
+    <h1>Monitor Lima ⇄ Ica</h1>
+    <p>Acceso restringido. Ingresa tu contraseña.</p>
+    <label for="c">Contraseña</label>
+    <input type="password" id="c" autocomplete="current-password" autofocus required>
+    <button id="b">Entrar</button>
+    <div id="err"></div>
+  </form>
+<script>
+document.getElementById('f').onsubmit = async (e) => {
+  e.preventDefault();
+  const b = document.getElementById('b'), err = document.getElementById('err');
+  b.disabled = true; err.textContent = '';
+  try {
+    const r = await fetch('/api/login', { method:'POST', headers:{'content-type':'application/json'}, body: JSON.stringify({ clave: document.getElementById('c').value }) });
+    const j = await r.json();
+    if (r.ok) { location.href = '/'; return; }
+    err.textContent = j.error || 'No se pudo entrar';
+  } catch (_) { err.textContent = 'No hay conexión con el servidor'; }
+  b.disabled = false; document.getElementById('c').select();
+};
+</script>
+</body>
+</html>
