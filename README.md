@@ -117,9 +117,9 @@ Cómo funciona:
 2. Luego, en cada ventana (30, 20, 10 min antes), actualiza **solo esa salida**. En Cruz del Sur es 1 consulta (el mapa de asientos de ese bus); si el bus aparece desde varios terminales, se actualizan todas sus apariciones. En Peru Bus se abre la página de la ruta y se toma solo esa salida.
 3. Si falla (429, sin respuesta, etc.) se reintenta hasta el número configurado, siempre antes de la hora de salida.
 4. Las ventanas que ya pasaron cuando se hizo el recorrido inicial, o cuando la salida ya partió (por ejemplo, si el servidor estuvo apagado), se marcan como omitidas.
-5. Todo pasa por una sola cola: nunca hay dos consultas a la vez contra las webs. Las actualizaciones manuales van primero.
+5. Hay dos carriles independientes que corren en paralelo: **monitoreo** (recorrido inicial y actualizaciones; las manuales van primero) y **reporte al instante**. Comparten un solo ritmo de consultas a Cruz del Sur (1 por segundo, una sola pausa ante un 429), así que correr los dos a la vez no aumenta la carga sobre la web: cada uno avanza un poco más lento. Cada pantalla muestra solo el progreso de su propio carril y “Cancelar consulta” cancela solo ese.
 
-**Salidas que ya no aparecen:** si al actualizar una salida la web (Peru Bus o Cruz del Sur) ya no la muestra, se da por **terminada**: no se reintenta y no se vuelve a consultar. En la tabla aparece como "ya no aparece" y en el registro como "salida terminada".
+**Salidas que ya no aparecen:** si al actualizar una salida la web (Peru Bus o Cruz del Sur) ya no la muestra, se da por **terminada**: no se reintenta y no se vuelve a consultar. En la tabla aparece como "🔒 Cerró la venta" con la hora en que se detectó; se conservan los vendidos de la última lectura.
 
 **Fin del día:** cuando ya no quedan salidas por partir (todas partieron o ya no aparecen en la web), el día queda **COMPLETADO**. Desde ahí no se consulta nada más, ni automático ni manual, y los datos quedan como registro final. Las salidas que ya partieron tampoco se vuelven a consultar nunca.
 
@@ -137,13 +137,15 @@ Con un día abierto:
 - **↻ Actualizar** en cada salida (tablas "Todas las salidas…"): solo esa salida.
 
 Mientras tanto:
-- Una columna chica por cada lectura programada (por ejemplo **30' · 20' · 10'**) indica si se hizo: ✔ hecha, ✖ falló, ⏳ en cola, ○ pendiente, – omitida. En la tabla por hora hay un ícono por cada salida de esa hora; al pasar el cursor se ve la empresa, la salida y la hora exacta de la lectura.
+- Una columna chica por cada lectura programada (por ejemplo **30' · 20' · 10'**) indica si se hizo: ✔ hecha, ✖ falló, ⏳ en cola, ○ pendiente, – omitida, 🔒 esa lectura encontró la venta cerrada (y 🔒 atenuado: ya no se hizo porque la venta había cerrado). Las lecturas hechas antes del cierre siguen mostrándose. En la tabla por hora hay un ícono por cada salida de esa hora; al pasar el cursor se ve la empresa, la salida y la hora exacta de la lectura.
 - Cada fila muestra su **última actualización** y su **próxima actualización programada** (hora, cuántos minutos antes de la salida y cuánto falta), o "partió" si ya salió. Al pasar el cursor por la última actualización se ve la evolución de los vendidos en cada lectura.
 - Una fila que se está actualizando queda **en gris y bloqueada** ("actualizando…" o "en cola") hasta que termina.
 - Al terminar aparece un **aviso** abajo a la derecha con lo que cambió: salida, vendidos antes → después y la diferencia. Si falló, dice por qué y si se reintentará. Cuando se actualizan muchas salidas juntas, sale un solo aviso con el resumen y los cambios más grandes.
 - La página se refresca sola: cada 3 s revisa si hubo cambios.
 
 **Avisos con sonido:** cada aviso suena (tonos generados por el navegador, sin archivos): uno alegre y el aviso resaltado en verde con la diferencia en grande cuando hubo ventas, uno descendente y el aviso en ámbar (“↩ Se liberaron asientos”) cuando los vendidos **bajan**, uno suave si no hubo cambios, uno grave si falló y una fanfarria cuando el día queda COMPLETADO. El botón 🔔 / 🔕 de la barra superior los silencia; la preferencia se guarda en una cookie (`sonido=0`). Los navegadores solo permiten sonar después de que hiciste algún clic en la página.
+
+Las acciones delicadas (actualizar todos los horarios, detener / reanudar, eliminar, cancelar consulta, borrar contraseñas, aplicar servicios a hoy) piden confirmación en un diálogo propio de la página (no el del navegador, que puede quedar bloqueado).
 
 ## Solo el administrador
 - **⏹ Detener actualizaciones / ▶ Reanudar** (en la cabecera del día): detener quita de la cola todo lo de ese día y no se consulta nada hasta reanudar. Al reanudar, las ventanas que pasaron mientras estuvo detenido se omiten.
@@ -163,7 +165,7 @@ Los reportes de una sola consulta (los anteriores y los nuevos) están en la sec
 El Excel de un día monitoreado trae además la hoja **Actualizaciones** y, en "Salidas", la hora de la última actualización de cada salida.
 
 ## Reporte al instante
-En **📋 Reporte al instante** se genera una foto de los vendidos de hoy en ese momento. Usa la misma cola que el monitoreo, así que nunca consulta en paralelo con una actualización. Los reportes antiguos de varios días se pueden seguir abriendo desde "Reportes guardados".
+En **📋 Reporte al instante** se genera una foto de los vendidos de hoy en ese momento. Corre en su propio carril, en paralelo con el monitoreo: no espera a que termine un recorrido o una actualización (comparten el ritmo de consultas a Cruz del Sur). Los reportes antiguos de varios días se pueden seguir abriendo desde "Reportes guardados".
 
 ## Cómo se calculan los datos
 - **Cruz del Sur:** hace la búsqueda del día y, por cada viaje, pide el mapa de asientos. Vendidos = asientos con `occupied: true`, sumando todos los pisos y tarifas.

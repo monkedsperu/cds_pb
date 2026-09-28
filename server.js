@@ -233,7 +233,8 @@ http.createServer(async (req, res) => {
     if (u.pathname === '/api/cola') return json(res, 200, monitor.estadoCola());
     if (req.method === 'POST' && u.pathname === '/api/cancelar') {
       if (ses.rol !== 'admin') return json(res, 403, { error: 'Solo el administrador puede cancelar o detener actualizaciones.' });
-      return json(res, 200, { ok: monitor.cancelar() });
+      const { carril } = await cuerpo(req);
+      return json(res, 200, { ok: monitor.cancelar(carril === 'reporte' ? 'reporte' : 'monitor') });
     }
     if (u.pathname.startsWith('/api/estado/')) {
       const t = monitor.trabajo(u.pathname.split('/').pop());
@@ -264,7 +265,7 @@ http.createServer(async (req, res) => {
     }
     if (u.pathname === '/api/config') {
       const M = leerAjustes().monitor;
-      return json(res, 200, { hoy: hoyLima(), enCurso: monitor.trabajoActivo(), rol: ses.rol,
+      return json(res, 200, { hoy: hoyLima(), enCurso: { monitor: monitor.trabajoActivo('monitor'), reporte: monitor.trabajoActivo('reporte') }, rol: ses.rol,
         monitor: ses.rol === 'admin' ? M : { activa: M.activa, perpetuo: M.perpetuo, actualizarSalidas: M.actualizarSalidas, hora: M.hora, minutosAntes: M.minutosAntes, vigDesde: M.vigDesde, vigHasta: M.vigHasta },
         reporteAuto: (({ hechas, ...R }) => R)(leerAjustes().reporteAuto) });
     }

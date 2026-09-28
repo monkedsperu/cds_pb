@@ -51,6 +51,15 @@ class Ritmo {
   ok() { if (++this.oks >= 15 && this.espacio > this.base) { this.espacio = Math.max(this.base, Math.round(this.espacio * 0.85)); this.oks = 0; } }
 }
 
+// Un solo ritmo compartido por todas las consultas del proceso: aunque corran a la vez el monitoreo
+// y un reporte al instante, a Cruz del Sur le llega el mismo espaciado (y una sola pausa ante un 429).
+let ritmoGlobal = null;
+function ritmoCompartido(espacioMs, log) {
+  if (!ritmoGlobal) ritmoGlobal = new Ritmo(espacioMs, log);
+  ritmoGlobal.base = espacioMs; ritmoGlobal.log = log;
+  return ritmoGlobal;
+}
+
 function cabeceras(token) {
   return {
     accept: 'application/json', 'content-type': 'application/json', 'accept-language': 'es-PE',
@@ -128,7 +137,7 @@ async function scrapeCruzDelSur({ origen, destino, fecha, config, token, log, av
   if (!token) throw Object.assign(new Error('Falta el token de Cruz del Sur. Agrégalo en ⚙ Configuración.'), { fatal: true });
   const cfg = config.cruzDelSur || {};
   const h = cabeceras(token);
-  const ritmo = new Ritmo(cfg.espacioEntreConsultasMs || 1000, log);
+  const ritmo = ritmoCompartido(cfg.espacioEntreConsultasMs || 1000, log);
   const pedir = crearPedir(ritmo, cfg.pausaAnte429Ms || 15000);
 
   log(`Cruz del Sur ${origen}→${destino} ${fecha}: buscando viajes…`);
@@ -212,7 +221,7 @@ async function leerBuses({ origen, destino, fecha, config, token, log, viajes, a
   if (!token) throw Object.assign(new Error('Falta el token de Cruz del Sur.'), { fatal: true });
   const cfg = config.cruzDelSur || {};
   const h = cabeceras(token);
-  const pedir = crearPedir(new Ritmo(cfg.espacioEntreConsultasMs || 1000, log), cfg.pausaAnte429Ms || 15000);
+  const pedir = crearPedir(ritmoCompartido(cfg.espacioEntreConsultasMs || 1000, log), cfg.pausaAnte429Ms || 15000);
   let busqueda = null;
   const out = [];
   for (let i = 0; i < viajes.length; i++) {

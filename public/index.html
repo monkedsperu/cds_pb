@@ -187,6 +187,7 @@
   .vcol{padding-left:4px!important;padding-right:4px!important;min-width:34px}
   th.vcol{font-size:12px}
   .vicon{display:inline-block;min-width:16px;font-weight:800;font-size:15px;cursor:help}
+  .v-cerr{font-size:13px} .v-cerr2{font-size:12px;opacity:.45}
   .v-ok{color:#067647} .v-err{color:var(--pb)} .v-omi{color:#98a2b3} .v-cola{font-size:13px} .v-pen{color:#98a2b3;font-weight:400}
   .estadofila{font-size:13px;font-weight:700;color:#475467;white-space:nowrap}
   /* completado */
@@ -225,6 +226,8 @@
   .logsbar label{display:flex;gap:6px;align-items:center;cursor:pointer}
   #logsPre{margin:0;background:#0f172a;color:#cbd5e1;border-radius:10px;padding:12px 14px;height:62vh;overflow:auto;font:12.5px/1.55 ui-monospace,Consolas,monospace;white-space:pre-wrap;word-break:break-word}
   #logsPre .lw{color:#fcd34d} #logsPre .le{color:#fca5a5} #logsPre .lt{color:#64748b}
+  #modalConf .btn-main.peligro{background:var(--pb)}
+  #confTexto ul{margin:8px 0;padding-left:20px} #confTexto li{margin:4px 0}
   /* toasts */
   #toasts{position:fixed;right:18px;bottom:18px;z-index:70;display:flex;flex-direction:column;gap:12px;width:min(520px,calc(100vw - 36px))}
   .toast{background:#fff;border:1px solid var(--line);border-left:7px solid #067647;border-radius:14px;box-shadow:0 14px 40px rgba(16,24,40,.25);padding:16px 18px;font-size:15px;position:relative;animation:entra .3s ease-out}
@@ -313,6 +316,11 @@
 </main>
 <div id="tip"></div>
 <div id="toasts"></div>
+<div class="modal oculto" id="modalConf" style="z-index:90"><div class="caja" style="max-width:560px">
+  <h3 id="confTitulo"></h3>
+  <div id="confTexto" style="font-size:15px;line-height:1.5"></div>
+  <div class="acciones" style="margin-top:18px"><button class="btn-sec" id="confNo">Cancelar</button><button class="btn-main" id="confSi">Confirmar</button></div>
+</div></div>
 <div class="modal oculto" id="modalExiste"><div class="caja" style="max-width:600px">
   <h3>Ya hay un monitoreo para este día</h3>
   <div id="existeInfo"></div>
@@ -419,13 +427,28 @@ const pillEmp = e => e ? `<span class="pill ${e}">${e==='cds'?'CDS':'PB'}</span>
 // Siempre se trabaja con el día de hoy (hora de Lima).
 const pintarHoy = () => { $('#diaHoy').textContent = 'Hoy · ' + fLarga(hoyLima()); };
 $('#verLog').onclick = () => $('#log').classList.toggle('oculto');
-$('#btnCancelar').onclick = async () => { if(confirm('¿Cancelar la consulta en curso?')) await fetch('/api/cancelar',{method:'POST'}); };
+// Confirmación propia: no depende del confirm() del navegador (que puede quedar bloqueado en silencio).
+function preguntar({ titulo, texto, si = 'Confirmar', no = 'Cancelar', peligro = false }){
+  return new Promise(res => {
+    $('#confTitulo').textContent = titulo; $('#confTexto').innerHTML = texto;
+    $('#confSi').textContent = si; $('#confNo').textContent = no; $('#confSi').classList.toggle('peligro', peligro);
+    const fin = (v) => { $('#modalConf').classList.add('oculto'); document.removeEventListener('keydown', tecla); res(v); };
+    const tecla = (e) => { if(e.key === 'Escape') fin(false); if(e.key === 'Enter') fin(true); };
+    $('#confSi').onclick = () => fin(true); $('#confNo').onclick = () => fin(false);
+    $('#modalConf').onclick = (e) => { if(e.target.id === 'modalConf') fin(false); };
+    document.addEventListener('keydown', tecla);
+    $('#modalConf').classList.remove('oculto'); $('#confSi').focus();
+  });
+}
+$('#btnCancelar').onclick = async () => { if(await preguntar({ titulo: '⏹ Cancelar consulta', texto: '¿Cancelar la consulta en curso? Lo que ya se leyó en esta pasada se descarta.', si: 'Cancelar consulta', no: 'Seguir', peligro: true }))
+  await post('/api/cancelar', { carril: MODO==='monitor' ? 'monitor' : 'reporte' }); };
 
 fetch('/api/config').then(r=>r.json()).then(c=>{
   ROL=c.rol; MON=c.monitor; RAUTO=c.reporteAuto; pintarHoy(); if(MODO==='monitor') cargarSelServ();
   if(ROL==='admin'){ $$('.soloadminb').forEach(b=>b.classList.remove('oculto')); $('.hdr-der').insertAdjacentHTML('afterbegin','<span class="rolpill">ADMIN</span>'); }
   pintarHist(); pintarCron(); if(rep) pintar();
-  if(c.enCurso) seguir(c.enCurso);
+  // Cada pantalla sigue solo su propio trabajo (monitoreo o reporte al instante).
+  const propio = c.enCurso && c.enCurso[MODO==='monitor' ? 'monitor' : 'reporte']; if(propio) seguir(propio);
 });
 
 $('#btnIniciar').onclick = async () => {
@@ -627,7 +650,7 @@ function tablaActs(acts){
       return `<tr><td>${fh(a.t)}</td><td>${tagAct(a)}</td><td>${esc(a.ruta||'')}</td><td>${pillEmp(a.emp)}</td>
       <td style="text-align:left">${a.hora?`<b>${a.hora}</b> ${esc(a.servicio||'')} <span class="ayuda">${esc(a.origen||'')}</span>`:esc(a.detalle||'')}</td>
       <td>${!a.id ? '' : `${a.antes??'?'} → <b>${a.despues??'–'}</b>${d?` <span class="${d>0?'pos':'neg'}">(${d>0?'+':''}${d})</span>`:''}`}</td>
-      <td style="text-align:left;white-space:normal">${a.ok?'<span class="ok-t">✔</span>':`<span class="err-t">✖</span> ${esc(a.error||'')}`}${a.cerrada?' <span class="tagt cerr">salida terminada · no se reintenta</span>':''}${a.intento&&a.de>1&&!a.cerrada?` <span class="ayuda">intento ${a.intento}/${a.de}${a.reintenta?' · se reintentará':''}</span>`:''}</td></tr>`; }).join('') + '</table></div>';
+      <td style="text-align:left;white-space:normal">${a.ok?'<span class="ok-t">✔</span>':`<span class="err-t">✖</span> ${esc(a.error||'')}`}${a.cerrada?' <span class="tagt cerr">🔒 cerró la venta · no se reintenta</span>':''}${a.intento&&a.de>1&&!a.cerrada?` <span class="ayuda">intento ${a.intento}/${a.de}${a.reintenta?' · se reintentará':''}</span>`:''}</td></tr>`; }).join('') + '</table></div>';
 }
 function pintarHist(){
   const l = HIST.filter(m => histFiltro==='todos' || (histFiltro==='auto') === (m.origen==='auto'));
@@ -693,7 +716,7 @@ function celdaProx(salidas){
   if(est.includes('curso')) return '<td class="estadofila"><span class="spin"></span> actualizando…</td>';
   if(est.includes('cola')) return '<td class="estadofila">⏳ en cola</td>';
   if(salidas.every(terminada)) return salidas.every(s=>s.cerrada)
-    ? `<td class="prox ya" title="${esc(salidas[0].cerrada.motivo||'')}"><span class="tagt cerr">ya no aparece</span><small>no se consulta más</small></td>`
+    ? `<td class="prox ya" title="${esc(salidas[0].cerrada.motivo||'')}"><span class="tagt cerr">🔒 Cerró la venta</span><small>detectado ${hm(salidas[0].cerrada.t)} · no se consulta más</small></td>`
     : '<td class="prox ya">partió</td>';
   if(rep.completado) return '<td class="prox ya">—</td>';
   if(rep.detenido) return '<td class="prox ya">⏹ detenido</td>';
@@ -703,17 +726,20 @@ function celdaProx(salidas){
 }
 // Ventanas configuradas (ej. 30, 20, 10 min antes): una columna chica por cada una.
 const VENTANAS = () => (esDia() && MON && MON.actualizarSalidas !== false) ? [...new Set(MON.minutosAntes||[])].sort((a,b)=>b-a) : [];
-const ICONO_V = { ok:['✔','v-ok','hecha'], error:['✖','v-err','falló'], omitida:['–','v-omi','omitida'], encolada:['⏳','v-cola','en cola'], pendiente:['○','v-pen','pendiente'] };
+const ICONO_V = { ok:['✔','v-ok','hecha'], error:['✖','v-err','falló'], omitida:['–','v-omi','omitida'], encolada:['⏳','v-cola','en cola'], pendiente:['○','v-pen','pendiente'],
+  cerrada:['🔒','v-cerr','esta lectura encontró la venta cerrada'], trasCierre:['🔒','v-cerr2','no se hizo: la venta ya había cerrado'] };
 function estadoVentana(s, m){
-  const e = (s.prog||{})[m]; if(e) return e;
-  if(s.cerrada || tSalida(rep.fecha, s.hora) <= Date.now() || rep.completado || rep.detenido) return 'omitida';
+  const e = (s.prog||{})[m]; if(e) return e;                 // lo que realmente pasó en esa lectura
+  if(s.cerrada) return 'trasCierre';                          // no se llegó a hacer porque cerró antes
+  if(tSalida(rep.fecha, s.hora) <= Date.now() || rep.completado || rep.detenido) return 'omitida';
   return 'pendiente';
 }
 const cabVentanas = () => VENTANAS().map(m=>`<th class="gen vcol" title="Lectura programada ${m} min antes de la salida">${m}'</th>`).join('');
 function celdasVentanas(salidas){
   return VENTANAS().map(m => `<td class="vcol">${salidas.map(s => { const [ic, cls, txt] = ICONO_V[estadoVentana(s, m)];
     const hora = hm(new Date(tSalida(rep.fecha, s.hora) - m*60000).toISOString());
-    return `<span class="vicon ${cls}" title="${EMP[s.emp]||''} ${s.hora} ${esc(s.servicio||'')}: lectura ${m} min antes (${hora}) · ${txt}">${ic}</span>`; }).join('')}</td>`).join('');
+    const extra = s.cerrada && (cls==='v-cerr' || cls==='v-cerr2') ? ` (cierre detectado a las ${hm(s.cerrada.t)})` : '';
+    return `<span class="vicon ${cls}" title="${EMP[s.emp]||''} ${s.hora} ${esc(s.servicio||'')}: lectura ${m} min antes (${hora}) · ${txt}${extra}">${ic}</span>`; }).join('')}</td>`).join('');
 }
 function celdaUlt(salidas){
   const ult = salidas.map(s=>s.actualizado).filter(Boolean).sort().pop();
@@ -807,7 +833,7 @@ function toast(html, tipo){
 }
 const lineaAct = a => { const d = a.ok && a.antes!=null ? a.despues - a.antes : null;
   return `${pillEmp(a.emp)} <b>${a.hora}</b> ${esc(a.servicio)} <span class="ayuda">${esc(a.ruta)} · ${esc(a.origen||'')}</span><br>` +
-    (a.cerrada ? `<span class="err-t">Ya no aparece en la web:</span> se da por terminada y <b>no se vuelve a consultar</b>.` : a.ok ? `Vendidos: ${a.antes??'?'} → <b style="font-size:20px">${a.despues}</b>${d?`<span class="delta ${d>0?'pos':'neg'}">${d>0?'+':''}${d}</span>`:' <span class="ayuda">(sin cambios)</span>'}${d<0?`<div class="nota">${-d} asiento${d<-1?'s':''} que figuraba${d<-1?'n':''} ocupado${d<-1?'s':''} ahora está${d<-1?'n':''} libre${d<-1?'s':''}: reserva que venció sin pagarse o pasaje anulado.</div>`:''}`
+    (a.cerrada ? `<b>🔒 Cerró la venta</b>: la salida ya no aparece en la web, así que <b>no se vuelve a consultar</b>. Se conservan los ${a.antes ?? '?'} vendidos de la última lectura.` : a.ok ? `Vendidos: ${a.antes??'?'} → <b style="font-size:20px">${a.despues}</b>${d?`<span class="delta ${d>0?'pos':'neg'}">${d>0?'+':''}${d}</span>`:' <span class="ayuda">(sin cambios)</span>'}${d<0?`<div class="nota">${-d} asiento${d<-1?'s':''} que figuraba${d<-1?'n':''} ocupado${d<-1?'s':''} ahora está${d<-1?'n':''} libre${d<-1?'s':''}: reserva que venció sin pagarse o pasaje anulado.</div>`:''}`
           : `<span class="err-t">No se pudo leer:</span> ${esc(a.error||'')}${a.reintenta?' · <b>se reintentará</b>':''}`); };
 const origenAct = a => a.tipo==='programada' ? `⏱ Programada, ${a.m} min antes de la salida` : a.tipo==='todas' ? '↻ Todos los horarios' : '👤 Actualización manual';
 function avisarNuevas(r){
@@ -817,9 +843,9 @@ function avisarNuevas(r){
   r.actualizaciones.slice(prev).filter(a=>a.tipo==='fin').forEach(a=>toast(`<h4>🏁 Monitoreo COMPLETADO</h4><div class="linea">${esc(a.detalle)}</div><div class="meta">${fLarga(r.fecha)} · ${hm(a.t)}</div>`, 'fin'));
   const lotes = {}; nuevas.forEach(a=>{ (lotes[a.lote] = lotes[a.lote] || []).push(a); });
   Object.values(lotes).forEach(l => {
-    const tipoDe = a => !a.ok ? 'err' : a.antes==null ? 'ok' : a.despues > a.antes ? 'exito' : a.despues < a.antes ? 'libera' : 'ok';
+    const tipoDe = a => !a.ok ? (a.cerrada ? 'info' : 'err') : a.antes==null ? 'ok' : a.despues > a.antes ? 'exito' : a.despues < a.antes ? 'libera' : 'ok';
     const TITULO = { err: '', exito: '🎉 ¡Hubo ventas! Salida actualizada', libera: '↩ Se liberaron asientos', ok: '✔ Salida actualizada' };
-    if(l.length <= 3) return l.forEach(a => toast(`<h4>${!a.ok ? (a.cerrada?'⏹ Salida terminada':'✖ Falló la actualización') : TITULO[tipoDe(a)]}</h4><div class="linea">${lineaAct(a)}</div><div class="meta">${origenAct(a)} · ${hm(a.t)}${a.de>1?` · intento ${a.intento}/${a.de}`:''}</div>`, tipoDe(a)));
+    if(l.length <= 3) return l.forEach(a => toast(`<h4>${!a.ok ? (a.cerrada?'🔒 Cerró la venta':'✖ Falló la actualización') : TITULO[tipoDe(a)]}</h4><div class="linea">${lineaAct(a)}</div><div class="meta">${origenAct(a)} · ${hm(a.t)}${a.de>1?` · intento ${a.intento}/${a.de}`:''}</div>`, tipoDe(a)));
     const ok = l.filter(a=>a.ok), mal = l.length - ok.length;
     const delta = ok.reduce((s,a)=>s + (a.antes!=null ? a.despues - a.antes : 0), 0);
     const subieron = ok.filter(a=>a.antes!=null && a.despues>a.antes), bajaron = ok.filter(a=>a.antes!=null && a.despues<a.antes);
@@ -905,11 +931,11 @@ $('#btnGuardarServ').onclick = async () => {
   const d = await rs.json(); if(d.cerrado) return;
   const lista = o => [...o.cds.map(x=>'Cruz del Sur '+x), ...o.pb.map(x=>'Peru Bus '+x)];
   const q = lista(d.quitar), a = lista(d.agregar); if(!q.length && !a.length) return;
-  const texto = `Hoy (${fCorta(hoy)}) ya se está monitoreando con la selección anterior.\n\n¿Aplicar el cambio también al monitoreo de hoy?\n` +
-    (q.length ? `\n• Se dejarán de monitorear: ${q.join(', ')} (${d.nQuitar} salida(s) que aún no parten).` : '') +
-    (a.length ? `\n• Se agregarán: ${a.join(', ')} (se leerán ahora sus salidas que aún no parten).` : '') +
-    '\n\nSi eliges Cancelar, hoy sigue igual y el cambio aplica desde mañana.';
-  if(!confirm(texto)) return msg('#msgServ', '✔ Guardado. Hoy sigue con la selección anterior; el cambio aplica desde el próximo recorrido.', true);
+  const texto = `Hoy (${fCorta(hoy)}) ya se está monitoreando con la selección anterior. ¿Aplicar el cambio también al monitoreo de hoy?<ul>` +
+    (q.length ? `<li>Se dejarán de monitorear: <b>${esc(q.join(', '))}</b> (${d.nQuitar} salida(s) que aún no parten).</li>` : '') +
+    (a.length ? `<li>Se agregarán: <b>${esc(a.join(', '))}</b> (se leerán ahora sus salidas que aún no parten).</li>` : '') +
+    '</ul><span class="ayuda">Si eliges “Solo desde mañana”, hoy sigue igual y el cambio aplica desde el próximo recorrido.</span>';
+  if(!(await preguntar({ titulo: '⚙ Aplicar el cambio de servicios a hoy', texto, si: 'Aplicar también a hoy', no: 'Solo desde mañana' }))) return msg('#msgServ', '✔ Guardado. Hoy sigue con la selección anterior; el cambio aplica desde el próximo recorrido.', true);
   const ra = await post('/api/admin/dias/servicios',{fecha:hoy}); const ja = await ra.json();
   if(!ra.ok) return msg('#msgServ', ja.error, false);
   msg('#msgServ', `✔ Aplicado también a hoy${ja.quitadas?`: ${ja.quitadas} salida(s) dejaron de monitorearse`:''}${ja.id?'. Leyendo las salidas de los servicios agregados…':'.'}`, true);
@@ -938,7 +964,7 @@ $('#btnProbarActual').onclick = () => enviarToken(true);
 function pintarClaves(l){
   $('#listaClaves').innerHTML = l.length ? l.map((c,i)=>`<div class="fila"><code>${c.replace(/</g,'&lt;')}</code><button class="btn-sec" data-copiar="${i}">Copiar</button><button class="btn-del" data-borrar="${i}">Eliminar</button></div>`).join('') : '<p class="ayuda">No hay contraseñas de usuario. Solo entra el administrador.</p>';
   $$('[data-copiar]').forEach(b=>b.onclick=()=>{ navigator.clipboard && navigator.clipboard.writeText(l[b.dataset.copiar]); msg('#msgClaves','Copiada.',true); });
-  $$('[data-borrar]').forEach(b=>b.onclick=async()=>{ const c=l[b.dataset.borrar]; if(!confirm(`¿Eliminar la contraseña "${c}"? Quien la use ya no podrá entrar.`)) return;
+  $$('[data-borrar]').forEach(b=>b.onclick=async()=>{ const c=l[b.dataset.borrar]; if(!(await preguntar({ titulo: '🗑 Eliminar contraseña', texto: `¿Eliminar la contraseña <b>${esc(c)}</b>? Quien la use ya no podrá entrar y se cierran sus sesiones abiertas.`, si: 'Eliminar', peligro: true }))) return;
     const r = await fetch('/api/admin/claves',{method:'DELETE',headers:{'content-type':'application/json'},body:JSON.stringify({clave:c})}); const j=await r.json();
     if(r.ok){ pintarClaves(j.claves); msg('#msgClaves',`✔ Eliminada${j.cerradas?` (${j.cerradas} sesión(es) cerradas)`:''}.`,true); } else msg('#msgClaves',j.error,false); });
 }
@@ -1106,7 +1132,7 @@ function vistaDia(dia, r, conKpis){
       <td class="cds">${x.cds.n||''}</td><td class="cds" ${x.cds.n?tip(tipVendidos('Cruz del Sur',x.cds.l,x.hora)):''}>${x.cds.n?`<span class="num">${x.cds.v}</span>`:''}</td><td class="cds">${x.cds.n?x.cds.c:''}</td>
       <td class="pb">${x.pb.n||''}</td><td class="pb" ${x.pb.n?tip(tipVendidos('Peru Bus',x.pb.l,x.hora)):''}>${x.pb.n?`<span class="num">${x.pb.v}</span>`:''}</td><td class="pb">${x.pb.n?x.pb.c:''}</td>
       <td>${x.coinc?`<span class="${df>0?'pos':df<0?'neg':''}" style="font-size:17px">${df>0?'+':''}${df}</span>`:''}</td>${d?celdaUlt(todasH)+celdasVentanas(todasH)+celdaProx(todasH)+celdaBoton(todasH,`data-act-hora="${x.hora}"`):''}</tr>`; }).join('') +
-    `</table></div>${d && VENTANAS().length ? `<div class="ayuda" style="margin:6px 0 0">Columnas ${VENTANAS().map(m=>m+"'").join(' · ')}: lectura programada esos minutos antes de cada salida (un ícono por salida de esa hora) — <span class="v-ok">✔</span> hecha · <span class="v-err">✖</span> falló · ⏳ en cola · <span class="v-pen">○</span> pendiente · <span class="v-omi">–</span> omitida. Pasa el cursor sobre un ícono para ver la hora exacta.</div>` : ''}
+    `</table></div>${d && VENTANAS().length ? `<div class="ayuda" style="margin:6px 0 0">Columnas ${VENTANAS().map(m=>m+"'").join(' · ')}: lectura programada esos minutos antes de cada salida (un ícono por salida de esa hora) — <span class="v-ok">✔</span> hecha · <span class="v-err">✖</span> falló · ⏳ en cola · <span class="v-pen">○</span> pendiente · <span class="v-omi">–</span> omitida · 🔒 la venta cerró (atenuado: ya no se hizo por el cierre). Pasa el cursor sobre un ícono para ver la hora exacta.</div>` : ''}
     <details data-k="cds"><summary>Todas las salidas de Cruz del Sur (${r.cds.salidas.length})</summary>${detalle(r.cds.salidas,'cds')}</details>
     <details data-k="pb"><summary>Todas las salidas de Peru Bus (${r.pb.salidas.length})</summary>${detalle(r.pb.salidas,'pb')}</details></div>`;
   return h;
@@ -1166,7 +1192,7 @@ function cabeceraDia(){
     : `<div class="monbar"><button class="btn-main btn-grande" id="btnActTodas" ${quedan?'':'disabled'} title="Actualiza ahora todas las salidas que aún no parten, en las dos rutas">↻ Actualizar ahora todos los horarios</button><span class="estado">${estado}</span></div>`;
   const adm = ROL!=='admin' ? '' : `<span class="admbar">${rep.completado ? '' : rep.detenido ? '<button class="btn-adm" id="admReanudar">▶ Reanudar actualizaciones</button>' : '<button class="btn-adm" id="admDetener">⏹ Detener actualizaciones</button>'}<button class="btn-adm peligro" id="admBorrar">🗑 Eliminar día</button></span>`;
   return `<div class="card"><div class="seccab"><h3 class="sec">Monitoreo del ${fLarga(rep.fecha)}</h3>${tagOrigen(rep)}${rep.completado?'<span class="tagt fin">✔ COMPLETADO</span>':''}${rep.detenido?'<span class="tagt det">⏹ DETENIDO</span>':''}${adm}</div>
-    <div class="ayuda" style="margin:0">Recorrido inicial ${fh(rep.creado)}${ult?` · última actualización <b>${hm(ult.t)}</b>`:''} · ${rep.completado ? `${todas.length} salidas registradas` : `${quedan} de ${todas.length} salidas aún no parten`}${nCerr ? ` · ${nCerr} ya no aparecen en la web` : ''}</div>${bloqueServicios(rep.servicios)}
+    <div class="ayuda" style="margin:0">Recorrido inicial ${fh(rep.creado)}${ult?` · última actualización <b>${hm(ult.t)}</b>`:''} · ${rep.completado ? `${todas.length} salidas registradas` : `${quedan} de ${todas.length} salidas aún no parten`}${nCerr ? ` · 🔒 ${nCerr} cerraron la venta` : ''}</div>${bloqueServicios(rep.servicios)}
     ${pie}</div>`;
 }
 function pintar(){
@@ -1188,14 +1214,16 @@ function pintar(){
   $$('#reporte .tabs button').forEach(b=>b.onclick=()=>{ rutaSel=b.dataset.ruta; pintar(); });
   if(esDia()){
     const salidasDe = (filtro) => rep.dias[0].rutas.flatMap(r=>[...r.cds.salidas,...r.pb.salidas].filter(s=>filtro(r,s))).map(s=>s.id);
-    const bt = $('#btnActTodas'); if(bt) bt.onclick = () => { if(confirm('¿Actualizar ahora todos los horarios que aún no parten (las dos rutas)? Las salidas que ya partieron no se tocan.')) pedirAct({desdeAhora:true}, idsFuturas()); };
-    const br = $('#btnActRuta'); if(br) br.onclick = () => { if(confirm('¿Actualizar ahora todos los horarios de esta ruta que aún no parten?')) pedirAct({desdeAhora:true, ruta:rutaSel}, idsFuturas(rutaSel)); };
+    const bt = $('#btnActTodas'); if(bt) bt.onclick = async () => { const n = idsFuturas().length;
+      if(await preguntar({ titulo: '↻ Actualizar ahora todos los horarios', texto: `Se volverán a leer ahora las <b>${n}</b> salidas que aún no parten, en las dos rutas. Las que ya partieron o cerraron la venta no se tocan.`, si: `Actualizar ${n} salidas` })) pedirAct({desdeAhora:true}, idsFuturas()); };
+    const br = $('#btnActRuta'); if(br) br.onclick = async () => { const n = idsFuturas(rutaSel).length, nombre = (rep.dias[0].rutas.find(r=>r.id===rutaSel)||{}).nombre || '';
+      if(await preguntar({ titulo: `↻ Actualizar ahora ${esc(nombre)}`, texto: `Se volverán a leer ahora las <b>${n}</b> salidas de <b>${esc(nombre)}</b> que aún no parten.`, si: `Actualizar ${n} salidas` })) pedirAct({desdeAhora:true, ruta:rutaSel}, idsFuturas(rutaSel)); };
     $$('[data-act-id]').forEach(b=>b.onclick=()=>pedirAct({ids:[b.dataset.actId]}, [b.dataset.actId]));
-    const adm = (accion, pregunta) => async () => { if(!confirm(pregunta)) return;
+    const adm = (accion, pregunta) => async () => { if(!(await preguntar(pregunta))) return;
       const r = await post('/api/admin/dias/'+accion, {fecha: rep.fecha}); const j = await r.json();
       if(!r.ok) return alert(j.error); vigilar(true); };
-    const bd = $('#admDetener'); if(bd) bd.onclick = adm('detener', '¿Detener todas las actualizaciones de este día? Se quitan de la cola y no se consulta nada hasta reanudar.');
-    const bre = $('#admReanudar'); if(bre) bre.onclick = adm('reanudar', '¿Reanudar las actualizaciones de este día? Las ventanas que ya pasaron se omiten.');
+    const bd = $('#admDetener'); if(bd) bd.onclick = adm('detener', { titulo: '⏹ Detener actualizaciones', texto: `¿Detener todas las actualizaciones del <b>${fLarga(rep.fecha)}</b>? Se quita de la cola lo pendiente y no se consulta nada hasta reanudar.`, si: 'Detener', peligro: true });
+    const bre = $('#admReanudar'); if(bre) bre.onclick = adm('reanudar', { titulo: '▶ Reanudar actualizaciones', texto: '¿Reanudar las actualizaciones de este día? Las lecturas programadas que pasaron mientras estuvo detenido se omiten.', si: 'Reanudar' });
     const bb = $('#admBorrar'); if(bb) bb.onclick = () => borrarReporte(rep.archivo);
     $$('[data-act-hora]').forEach(b=>b.onclick=()=>pedirAct({hora:b.dataset.actHora, ruta:rutaSel}, salidasDe((r,s)=>r.id===rutaSel && s.hora===b.dataset.actHora)));
   }
@@ -1216,7 +1244,7 @@ $('#btnCsv').onclick = () => {
   a.download = `reporte_${rep.desde}${rep.desde!==rep.hasta?'_a_'+rep.hasta:''}.csv`; a.click();
 };
 async function borrarReporte(f){
-  if(!confirm(f.startsWith('dia_') ? `¿Eliminar definitivamente el monitoreo del ${fLarga(f.slice(4,14))}? Se borra de inmediato, aunque se esté actualizando, y no se puede deshacer.` : `¿Eliminar definitivamente "${f}"?`)) return;
+  if(!(await preguntar({ titulo: '🗑 Eliminar', texto: f.startsWith('dia_') ? `¿Eliminar definitivamente el monitoreo del <b>${fLarga(f.slice(4,14))}</b>? Se borra de inmediato, aunque se esté actualizando, y <b>no se puede deshacer</b>.` : `¿Eliminar definitivamente <b>${esc(f)}</b>? No se puede deshacer.`, si: 'Eliminar', peligro: true }))) return;
   const r = await fetch('/api/admin/reportes/' + encodeURIComponent(f), {method:'DELETE'});
   if(!r.ok) return alert((await r.json()).error);
   if(rep && rep.archivo===f){ rep = null; $('#reporte').innerHTML = '<div class="card vacio">Eliminado.</div>'; ['#btnExcel','#btnJson','#btnCsv'].forEach(b=>$(b).disabled=true); }
