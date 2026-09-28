@@ -470,7 +470,7 @@ function preguntarExiste(d){
   $('#exForzar').textContent = puede ? `↻ Forzar actualización (${d.quedan})` : '↻ Forzar actualización';
   $('#exCancelar').onclick = cerrar;
   $('#exVer').onclick = () => { cerrar(); abrir(f, true); };
-  $('#exForzar').onclick = async () => { cerrar(); await abrir(f, true); if(rep && rep.fecha===d.fecha) pedirAct({desdeAhora:true}, idsFuturas()); };
+  $('#exForzar').onclick = async () => { cerrar(); await abrir(f, true); if(rep && rep.fecha===d.fecha) pedirAct({desdeAhora:true, via:'forzar'}, idsFuturas()); };
   $('#modalExiste').classList.remove('oculto');
 }
 const terminada = s => !!s.cerrada || tSalida(rep.fecha, s.hora) <= Date.now();
@@ -624,15 +624,27 @@ function tagOrigen(m){
   if(m.origen==='auto') return `<span class="tagt auto" title="${m.tipo==='dia'?'Iniciado solo por el monitoreo diario':'Consulta automática'}">⏱ Automático</span>`;
   return m.rol==='admin' ? '<span class="tagt admin">👤 Admin</span>' : '<span class="tagt manual">👤 Usuario</span>';
 }
+// Alcance de una actualización manual (lo que pidió la persona).
+function alcanceAct(a){
+  if(a.tipo==='todas'){
+    if(/Forzar/.test(a.via||'')) return 'forzar actualización';
+    if(/ruta/.test(a.via||'')) return `toda la ruta ${a.ruta||''}`.trim();
+    return 'todos los horarios';
+  }
+  if(/fila/.test(a.via||'')) return 'una fila';
+  if(/salida/.test(a.via||'')) return 'una salida';
+  return 'una fila / salida';
+}
 function tagAct(a){
   if(a.tipo==='inicial') return '<span class="tagt ini">Recorrido inicial</span>';
   if(a.tipo==='fin') return '<span class="tagt fin">✔ COMPLETADO</span>';
   if(a.tipo==='detenido') return '<span class="tagt det">⏹ Detenido · admin</span>';
   if(a.tipo==='reanudado') return '<span class="tagt admin">▶ Reanudado · admin</span>';
   if(a.tipo==='servicios') return '<span class="tagt admin">⚙ Servicios · admin</span>';
-  if(a.tipo==='programada') return `<span class="tagt auto">⏱ ${a.m} min antes</span>`;
-  if(a.tipo==='todas') return `<span class="tagt todas">↻ Todos los horarios${a.rol==='admin'?' · admin':''}</span>`;
-  return `<span class="tagt ${a.rol==='admin'?'admin':'manual'}">👤 Manual${a.rol==='admin'?' · admin':''}</span>`;
+  if(a.tipo==='programada') return `<span class="tagt auto">⏱ Automática · ${a.m} min antes</span>`;
+  const via = a.via || a.quien ? `<div class="ayuda" style="margin:2px 0 0;font-size:11px">${esc([a.via, a.quien].filter(Boolean).join(' · '))}</div>` : '';
+  const quien = a.rol==='admin' ? ' · admin' : a.rol==='usuario' ? ' · usuario' : '';
+  return `<span class="tagt ${a.rol==='admin'?'admin':'manual'}" title="${esc(a.via||'')}">👤 Manual · ${alcanceAct(a)}${quien}</span>${via}`;
 }
 function resumenServ(sv){
   if(!sv) return '<span class="ayuda">sin información</span>';
@@ -835,7 +847,7 @@ const lineaAct = a => { const d = a.ok && a.antes!=null ? a.despues - a.antes : 
   return `${pillEmp(a.emp)} <b>${a.hora}</b> ${esc(a.servicio)} <span class="ayuda">${esc(a.ruta)} · ${esc(a.origen||'')}</span><br>` +
     (a.cerrada ? `<b>🔒 Cerró la venta</b>: la salida ya no aparece en la web, así que <b>no se vuelve a consultar</b>. Se conservan los ${a.antes ?? '?'} vendidos de la última lectura.` : a.ok ? `Vendidos: ${a.antes??'?'} → <b style="font-size:20px">${a.despues}</b>${d?`<span class="delta ${d>0?'pos':'neg'}">${d>0?'+':''}${d}</span>`:' <span class="ayuda">(sin cambios)</span>'}${d<0?`<div class="nota">${-d} asiento${d<-1?'s':''} que figuraba${d<-1?'n':''} ocupado${d<-1?'s':''} ahora está${d<-1?'n':''} libre${d<-1?'s':''}: reserva que venció sin pagarse o pasaje anulado.</div>`:''}`
           : `<span class="err-t">No se pudo leer:</span> ${esc(a.error||'')}${a.reintenta?' · <b>se reintentará</b>':''}`); };
-const origenAct = a => a.tipo==='programada' ? `⏱ Programada, ${a.m} min antes de la salida` : a.tipo==='todas' ? '↻ Todos los horarios' : '👤 Actualización manual';
+const origenAct = a => (a.tipo==='programada' ? `⏱ Automática, ${a.m} min antes de la salida` : `👤 Manual · ${alcanceAct(a)}`) + (a.via ? ` · ${esc(a.via)}` : '') + (a.quien ? ` · ${esc(a.quien)}` : '');
 function avisarNuevas(r){
   const n = r.actualizaciones.length, prev = vistos[r.fecha]; vistos[r.fecha] = n;
   if(prev == null || n <= prev) return;
@@ -1215,17 +1227,17 @@ function pintar(){
   if(esDia()){
     const salidasDe = (filtro) => rep.dias[0].rutas.flatMap(r=>[...r.cds.salidas,...r.pb.salidas].filter(s=>filtro(r,s))).map(s=>s.id);
     const bt = $('#btnActTodas'); if(bt) bt.onclick = async () => { const n = idsFuturas().length;
-      if(await preguntar({ titulo: '↻ Actualizar ahora todos los horarios', texto: `Se volverán a leer ahora las <b>${n}</b> salidas que aún no parten, en las dos rutas. Las que ya partieron o cerraron la venta no se tocan.`, si: `Actualizar ${n} salidas` })) pedirAct({desdeAhora:true}, idsFuturas()); };
+      if(await preguntar({ titulo: '↻ Actualizar ahora todos los horarios', texto: `Se volverán a leer ahora las <b>${n}</b> salidas que aún no parten, en las dos rutas. Las que ya partieron o cerraron la venta no se tocan.`, si: `Actualizar ${n} salidas` })) pedirAct({desdeAhora:true, via:'todos'}, idsFuturas()); };
     const br = $('#btnActRuta'); if(br) br.onclick = async () => { const n = idsFuturas(rutaSel).length, nombre = (rep.dias[0].rutas.find(r=>r.id===rutaSel)||{}).nombre || '';
-      if(await preguntar({ titulo: `↻ Actualizar ahora ${esc(nombre)}`, texto: `Se volverán a leer ahora las <b>${n}</b> salidas de <b>${esc(nombre)}</b> que aún no parten.`, si: `Actualizar ${n} salidas` })) pedirAct({desdeAhora:true, ruta:rutaSel}, idsFuturas(rutaSel)); };
-    $$('[data-act-id]').forEach(b=>b.onclick=()=>pedirAct({ids:[b.dataset.actId]}, [b.dataset.actId]));
+      if(await preguntar({ titulo: `↻ Actualizar ahora ${esc(nombre)}`, texto: `Se volverán a leer ahora las <b>${n}</b> salidas de <b>${esc(nombre)}</b> que aún no parten.`, si: `Actualizar ${n} salidas` })) pedirAct({desdeAhora:true, ruta:rutaSel, via:'ruta'}, idsFuturas(rutaSel)); };
+    $$('[data-act-id]').forEach(b=>b.onclick=()=>pedirAct({ids:[b.dataset.actId], via:'salida'}, [b.dataset.actId]));
     const adm = (accion, pregunta) => async () => { if(!(await preguntar(pregunta))) return;
       const r = await post('/api/admin/dias/'+accion, {fecha: rep.fecha}); const j = await r.json();
       if(!r.ok) return alert(j.error); vigilar(true); };
     const bd = $('#admDetener'); if(bd) bd.onclick = adm('detener', { titulo: '⏹ Detener actualizaciones', texto: `¿Detener todas las actualizaciones del <b>${fLarga(rep.fecha)}</b>? Se quita de la cola lo pendiente y no se consulta nada hasta reanudar.`, si: 'Detener', peligro: true });
     const bre = $('#admReanudar'); if(bre) bre.onclick = adm('reanudar', { titulo: '▶ Reanudar actualizaciones', texto: '¿Reanudar las actualizaciones de este día? Las lecturas programadas que pasaron mientras estuvo detenido se omiten.', si: 'Reanudar' });
     const bb = $('#admBorrar'); if(bb) bb.onclick = () => borrarReporte(rep.archivo);
-    $$('[data-act-hora]').forEach(b=>b.onclick=()=>pedirAct({hora:b.dataset.actHora, ruta:rutaSel}, salidasDe((r,s)=>r.id===rutaSel && s.hora===b.dataset.actHora)));
+    $$('[data-act-hora]').forEach(b=>b.onclick=()=>pedirAct({hora:b.dataset.actHora, ruta:rutaSel, via:'fila'}, salidasDe((r,s)=>r.id===rutaSel && s.hora===b.dataset.actHora)));
   }
   $$('[data-dia]').forEach(el=>el.addEventListener('click',()=>{ diaSel=el.dataset.dia; pintar(); $('.diabar') && $('.diabar').scrollIntoView({behavior:'smooth'}); }));
   const sd = $('#selDia'); if(sd) sd.onchange = () => { diaSel = sd.value; pintar(); $('.diabar').scrollIntoView(); };

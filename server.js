@@ -109,6 +109,12 @@ function sesionDe(req) {
   if (s.vence < Date.now()) { sesiones.delete(c.sid); return null; }
   return s;
 }
+// Quién hizo un pedido: rol, qué contraseña de usuario (por número, nunca la contraseña) e IP.
+function quienEs(ses, req) {
+  if (ses.rol === 'admin') return `admin · IP ${ipDe(req)}`;
+  const i = contrasenas().findIndex((c) => huella(c) === ses.huella);
+  return `usuario${i >= 0 ? ` (clave #${i + 1})` : ''} · IP ${ipDe(req)}`;
+}
 const ipDe = (req) => (req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0].trim();
 
 // ---------------- monitoreo por día (ver lib/monitor.js) ----------------
@@ -211,11 +217,15 @@ http.createServer(async (req, res) => {
       return json(res, 200, { id: monitor.iniciarDia(fecha, 'manual', ses.rol).id });
     }
     if (req.method === 'POST' && u.pathname === '/api/dias/actualizar') {
-      const { fecha, ids, hora, ruta, desdeAhora } = await cuerpo(req);
+      const { fecha, ids, hora, ruta, desdeAhora, via } = await cuerpo(req);
+      const VIAS = { fila: 'botón ↻ de la fila', salida: 'botón ↻ de la salida', ruta: 'botón “todos los horarios de la ruta”', todos: 'botón “Actualizar ahora todos los horarios”', forzar: '“Forzar actualización” (Iniciar monitoreo)' };
       if (!fechaOk(fecha)) return json(res, 400, { error: 'Fecha inválida' });
       const que = Array.isArray(ids) ? { ids: ids.map(String) } : /^\d{2}:\d{2}$/.test(hora || '') ? { hora, ruta } : desdeAhora ? { desdeAhora: true, ruta } : null;
       if (!que) return json(res, 400, { error: 'Indica qué actualizar.' });
-      try { return json(res, 200, monitor.actualizarAhora(fecha, que, ses.rol)); } catch (e) { return json(res, 400, { error: e.message }); }
+      const viaTxt = VIAS[via] ? (que.hora ? `${VIAS[via]} ${que.hora}` : VIAS[via]) : 'origen desconocido';
+      const quien = quienEs(ses, req);
+      console.log(`Pedido de actualización del ${fecha}: ${viaTxt}${que.ruta ? ` (ruta ${que.ruta})` : ''} · ${quien}`);
+      try { return json(res, 200, monitor.actualizarAhora(fecha, que, ses.rol, viaTxt, quien)); } catch (e) { return json(res, 400, { error: e.message }); }
     }
     // --- reporte al instante (pestaña /reportes): una foto del día de hoy ---
     if (req.method === 'POST' && u.pathname === '/api/consultar') {
