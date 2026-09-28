@@ -16,13 +16,33 @@
       "Salon Cama": false
     }
   },
-  "permitirRangoUsuarios": false,
-  "auto": {
+  "monitor": {
     "activa": false,
-    "hora": "06:00",
-    "desdeDias": 1,
-    "cantidadDias": 1,
+    "perpetuo": false,
+    "actualizarSalidas": true,
+    "hora": "03:00",
+    "minutosAntes": [
+      30,
+      20,
+      10,
+      2
+    ],
+    "reintentos": 3,
+    "esperaReintentoSeg": 20,
+    "vigDesde": "2026-09-28",
+    "vigHasta": "2026-10-28",
     "ultima": null,
+    "ultimoResultado": null
+  },
+  "reporteAuto": {
+    "activa": false,
+    "horas": [
+      "08:00"
+    ],
+    "perpetuo": true,
+    "vigDesde": null,
+    "vigHasta": null,
+    "hechas": null,
     "ultimoResultado": null
   }
 }

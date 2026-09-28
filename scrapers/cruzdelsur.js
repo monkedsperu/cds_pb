@@ -97,10 +97,10 @@ async function buscarViajes(pedir, origen, destino, fecha, h) {
   throw new Error('La búsqueda de Cruz del Sur no terminó a tiempo.');
 }
 
-async function mapaAsientos(pedir, tripId, h) {
+async function mapaAsientos(pedir, tripId, h, intentos) {
   let d = await pedir(`${API}/api/v2/trips/${tripId}/details_requests`, {
     method: 'POST', headers: h, body: JSON.stringify({ with_pricing: true, include: ['bus'] }),
-  });
+  }, intentos);
   if (d.state !== 'finished') await sleep(1500); // casi siempre ya está listo después de esto
   for (let i = 0; i < 20 && d.state !== 'finished' && d.poll_to; i++) {
     d = await pedir(API + d.poll_to, { headers: h });
@@ -155,6 +155,7 @@ async function scrapeCruzDelSur({ origen, destino, fecha, config, token, log, av
     origen: (terminales[t.origin_id] && terminales[t.origin_id].name) || t.origin_id,
     destino: (terminales[t.destination_id] && terminales[t.destination_id].name) || t.destination_id,
     escalas: t.stops || 0, precio: t.pricing ? t.pricing.total : null, duplicadoDe: null, nota: '',
+    tripId: t.id, bus: codigoBus(t.id), // para volver a leer solo este bus más tarde
   });
   const llenar = (t, m) => ({ ...base(t), capacidad: m.vendidos + m.libres, libres: m.libres, vendidos: m.vendidos,
     porTarifa: m.porTarifa, porPiso: m.porPiso, ingresoEstimado: m.ingreso });
@@ -204,6 +205,37 @@ async function scrapeCruzDelSur({ origen, destino, fecha, config, token, log, av
   return salidas.sort((a, b) => minutos(a.hora) - minutos(b.hora));
 }
 
+// Vuelve a leer solo algunos buses (actualización de salidas puntuales).
+// viajes: [{ tripId, hora, servicio }] -> [{ ok, m } | { ok: false, error }] en el mismo orden.
+// Si el id guardado ya no sirve, busca el viaje de nuevo (mismo bus, o misma hora y servicio).
+async function leerBuses({ origen, destino, fecha, config, token, log, viajes, alLeer = () => {} }) {
+  if (!token) throw Object.assign(new Error('Falta el token de Cruz del Sur.'), { fatal: true });
+  const cfg = config.cruzDelSur || {};
+  const h = cabeceras(token);
+  const pedir = crearPedir(new Ritmo(cfg.espacioEntreConsultasMs || 1000, log), cfg.pausaAnte429Ms || 15000);
+  let busqueda = null;
+  const out = [];
+  for (let i = 0; i < viajes.length; i++) {
+    const v = viajes[i];
+    let m = null; let error = null;
+    try { m = await mapaAsientos(pedir, v.tripId, h, 2); } catch (e) { if (e.fatal) throw e; error = e; }
+    if (!m) {
+      try {
+        if (!busqueda) busqueda = await buscarViajes(pedir, origen, destino, fecha, h);
+        const lineas = busqueda.lines || {};
+        const trips = busqueda.trips || [];
+        const t = trips.find((x) => codigoBus(x.id) === codigoBus(v.tripId))
+          || trips.find((x) => hhmm(x.departure) === v.hora && ((lineas[x.line_id] || {}).name || x.line_id) === v.servicio);
+        if (!t) throw Object.assign(new Error('La salida ya no aparece en la web de Cruz del Sur (cerrada o ya partió).'), { definitivo: true });
+        m = await mapaAsientos(pedir, t.id, h);
+      } catch (e) { if (e.fatal) throw e; error = e; }
+    }
+    out.push(m ? { ok: true, m } : { ok: false, error: String((error && error.message) || error), definitivo: !!(error && error.definitivo) });
+    alLeer(i);
+  }
+  return out;
+}
+
 // Prueba del token: una búsqueda y un mapa de asientos (esa parte exige token).
 async function probarToken(token) {
   const ritmo = new Ritmo(400, () => {});
@@ -217,4 +249,4 @@ async function probarToken(token) {
   return { ok: true, detalle: `Token válido: se leyó el mapa de asientos de prueba (${m.vendidos + m.libres} asientos).` };
 }
 
-module.exports = { scrapeCruzDelSur, probarToken, codigoBus };
+module.exports = { scrapeCruzDelSur, leerBuses, probarToken, codigoBus };

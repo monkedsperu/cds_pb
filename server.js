@@ -11,8 +11,23 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
-const { scrapeCruzDelSur, probarToken } = require('./scrapers/cruzdelsur');
+const { probarToken } = require('./scrapers/cruzdelsur');
 const { construirExcel } = require('./lib/reporteExcel');
+const { crearMonitor, MONITOR_INICIAL, REPORTE_AUTO_INICIAL } = require('./lib/monitor');
+
+// Últimas líneas de la consola, para el panel "Ver logs" del admin. Solo en memoria y con tope fijo.
+const LOGS = []; const MAX_LOGS = 200; let nLog = 0;
+for (const nivel of ['log', 'warn', 'error']) {
+  const original = console[nivel].bind(console);
+  console[nivel] = (...args) => {
+    original(...args);
+    try {
+      const txt = args.map((x) => (typeof x === 'string' ? x : x instanceof Error ? (x.stack || x.message) : JSON.stringify(x))).join(' ');
+      for (const l of txt.split('\n')) if (l.trim()) LOGS.push({ i: ++nLog, t: Date.now(), n: nivel, l: l.slice(0, 500) });
+      if (LOGS.length > MAX_LOGS) LOGS.splice(0, LOGS.length - MAX_LOGS);
+    } catch (_) { /* nunca romper por un log */ }
+  };
+}
 
 const RAIZ = __dirname;
 const config = JSON.parse(fs.readFileSync(path.join(RAIZ, 'config.json'), 'utf8'));
@@ -21,7 +36,6 @@ const ENV = path.join(RAIZ, '.env');
 fs.mkdirSync(DATA, { recursive: true });
 const PUERTO = Number(process.env.PORT || config.puerto || 3000);
 const HOST = process.env.HOST || config.host || '127.0.0.1';
-const MAX_DIAS = config.maxDiasPorConsulta || 31;
 const HORAS_SESION = config.horasSesion || 12;
 
 // ---------------- .env (sin dependencias) ----------------
@@ -62,8 +76,12 @@ function leerAjustes() {
   let a = {};
   try { a = JSON.parse(fs.readFileSync(AJUSTES, 'utf8')); } catch (_) {}
   a.servicios = a.servicios || {};
-  if (typeof a.permitirRangoUsuarios !== 'boolean') a.permitirRangoUsuarios = false; // por defecto solo el admin busca por rango
-  a.auto = { activa: false, hora: '06:00', desdeDias: 1, cantidadDias: 1, ultima: null, ultimoResultado: null, ...(a.auto || {}) };
+  // Monitoreo diario. El periodo (desde/hasta) se hereda de la antigua consulta automática.
+  a.monitor = { ...MONITOR_INICIAL, vigDesde: (a.auto && a.auto.vigDesde) || null, vigHasta: (a.auto && a.auto.vigHasta) || null, ...(a.monitor || {}) };
+  if (typeof a.monitor.perpetuo !== 'boolean') a.monitor.perpetuo = !a.monitor.vigDesde && !a.monitor.vigHasta;
+  a.reporteAuto = { ...REPORTE_AUTO_INICIAL, ...(a.reporteAuto || {}) };
+  delete a.auto;
+  delete a.permitirRangoUsuarios; // la búsqueda por rango de fechas ya no existe: todo es del día de hoy
   for (const emp of ['cds', 'pb']) {
     a.servicios[emp] = a.servicios[emp] || {};
     for (const n of SERVICIOS_INICIALES[emp]) if (!(n in a.servicios[emp])) a.servicios[emp][n] = true;
@@ -93,96 +111,13 @@ function sesionDe(req) {
 }
 const ipDe = (req) => (req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0].trim();
 
-// ---------------- trabajos ----------------
-const trabajos = new Map();
-let enCurso = null;
+// ---------------- monitoreo por día (ver lib/monitor.js) ----------------
+const monitor = crearMonitor({ config, DATA, leerAjustes, guardarAjustes, registrarServicios, tokenCDS });
+const hoyLima = () => new Date(Date.now() - 5 * 36e5).toISOString().slice(0, 10);
 
-function fechasEntre(desde, hasta) {
-  const out = []; const d = new Date(`${desde}T12:00:00Z`); const fin = new Date(`${hasta}T12:00:00Z`);
-  while (d <= fin) { out.push(d.toISOString().slice(0, 10)); d.setUTCDate(d.getUTCDate() + 1); }
-  return out;
-}
-
-async function abrirNavegadorPB(log) {
-  if (!config.peruBus || config.peruBus.activo === false) { log('Peru Bus desactivado en config.json.'); return null; }
-  let chromium;
-  try { ({ chromium } = require('playwright')); } catch (_) {
-    log('Peru Bus: Playwright no está instalado. Se omite Peru Bus.'); return null;
-  }
-  try {
-    const navegador = await chromium.launch({ headless: true });
-    const contexto = await navegador.newContext({ locale: 'es-PE', timezoneId: 'America/Lima', viewport: { width: 1280, height: 900 } });
-    return { navegador, contexto };
-  } catch (e) { log(`Peru Bus: no se pudo abrir el navegador (${e.message.split('\n')[0]}). Se omite Peru Bus.`); return null; }
-}
-
-function nuevoTrabajo(desde, hasta, origen = 'manual') {
-  const id = Date.now().toString(36);
-  const fechas = fechasEntre(desde, hasta);
-  const t = { id, desde, hasta, origen, estado: 'corriendo', progreso: 0, paso: 'Iniciando…', mensajes: [], resultado: null, error: null, cancelar: false };
-  trabajos.set(id, t); enCurso = id;
-  const log = (m) => { const l = `[${new Date().toLocaleTimeString('es-PE')}] ${m}`; t.mensajes.push(l); if (t.mensajes.length > 300) t.mensajes.shift(); console.log(l); };
-  ejecutar(t, fechas, log)
-    .catch((e) => { t.estado = 'error'; t.error = String(e.message || e); log(`ERROR: ${t.error}`); })
-    .finally(() => {
-      enCurso = null;
-      if (origen === 'auto') { try { const a = leerAjustes(); a.auto.ultimoResultado = t.estado === 'listo' ? `Correcta · ${t.resultado.archivo}` : `Error: ${t.error}`; guardarAjustes(a); } catch (_) {} }
-    });
-  return t;
-}
-
-async function ejecutar(t, fechas, log) {
-  const rutas = config.rutas;
-  const unidades = fechas.length * rutas.length;
-  let hechas = 0;
-  const marcar = (f, paso) => { t.progreso = Math.min(99, Math.round(((hechas + f) / unidades) * 100)); if (paso) t.paso = paso; };
-  const token = tokenCDS();
-  const aj = leerAjustes();
-  const permitido = (emp) => (n) => aj.servicios[emp][n] !== false;
-  const servs = (emp) => ({ incluidos: Object.entries(aj.servicios[emp]).filter(([, v]) => v).map(([k]) => k), excluidos: Object.entries(aj.servicios[emp]).filter(([, v]) => !v).map(([k]) => k) });
-  const pb = await abrirNavegadorPB(log);
-  const { scrapePeruBus } = pb ? require('./scrapers/perubus') : {};
-  const resultado = { origen: t.origen, desde: fechas[0], hasta: fechas[fechas.length - 1], generado: new Date().toISOString(), servicios: { cds: servs('cds'), pb: servs('pb') }, dias: [] };
-  try {
-    for (const fecha of fechas) {
-      const dia = { fecha, rutas: [] };
-      for (const ruta of rutas) {
-        if (t.cancelar) throw new Error('Consulta cancelada por el usuario.');
-        const r = { id: ruta.id, nombre: ruta.nombre, cds: { salidas: [], error: null }, pb: { salidas: [], error: null } };
-        const et = `${fecha} · ${ruta.nombre}`;
-        marcar(0, `${et}: Cruz del Sur`);
-        try {
-          r.cds.salidas = await scrapeCruzDelSur({ origen: ruta.cds[0], destino: ruta.cds[1], fecha, config, token, log,
-            servicioPermitido: permitido('cds'), alDescubrir: (n) => registrarServicios('cds', n),
-            avance: (n, total) => marcar(total ? 0.8 * n / total : 0.8, `${et}: Cruz del Sur ${n}/${total} buses`) });
-        } catch (e) { r.cds.error = String(e.message || e); log(`Cruz del Sur (${et}): ${r.cds.error}`); if (e.fatal) throw e; }
-        marcar(0.8, `${et}: Peru Bus`);
-        if (pb) {
-          const pagina = await pb.contexto.newPage();
-          try {
-            const todas = await scrapePeruBus(pagina, { origen: ruta.pb[0], destino: ruta.pb[1], fecha, config, log });
-            registrarServicios('pb', [...new Set(todas.map((x) => x.servicio))]);
-            r.pb.salidas = todas.filter((x) => permitido('pb')(x.servicio));
-            if (todas.length !== r.pb.salidas.length) log(`Peru Bus: ${todas.length - r.pb.salidas.length} salidas omitidas por servicio no marcado.`);
-          }
-          catch (e) { r.pb.error = String(e.message || e); log(`Peru Bus (${et}): ${r.pb.error}`); }
-          await pagina.close();
-        } else r.pb.error = 'Peru Bus no se consultó (ver config.json / README).';
-        dia.rutas.push(r); hechas++; marcar(0);
-      }
-      resultado.dias.push(dia);
-    }
-  } finally { if (pb) await pb.navegador.close(); }
-  const sello = new Date().toISOString().slice(0, 16).replace(/[-:]/g, '').replace('T', '-');
-  const pre = t.origen === 'auto' ? 'auto_' : '';
-  const archivo = resultado.desde === resultado.hasta ? `${pre}reporte_${resultado.desde}_cap-${sello}.json` : `${pre}reporte_${resultado.desde}_a_${resultado.hasta}_cap-${sello}.json`;
-  fs.writeFileSync(path.join(DATA, archivo), JSON.stringify(resultado));
-  resultado.archivo = archivo;
-  t.resultado = resultado; t.progreso = 100; t.paso = 'Listo'; t.estado = 'listo';
-  log(`Listo. Guardado en data/${archivo}`);
-}
-
+// Reportes del formato anterior (una sola consulta): siguen visibles en la grilla.
 function normalizar(r) {
+  if (r.tipo === 'dia') return monitor.comoReporte(r);
   const n = r.dias ? r : { desde: r.fecha, hasta: r.fecha, generado: r.generado, dias: [{ fecha: r.fecha, rutas: r.rutas }] };
   // Reportes antiguos de Peru Bus: completar el tipo de asiento vendido (= servicio del bus).
   n.dias.forEach((d) => d.rutas.forEach((ru) => (ru.pb.salidas || []).forEach((x) => {
@@ -191,29 +126,31 @@ function normalizar(r) {
   return n;
 }
 
-// ---------------- consulta automática diaria ----------------
-// Se revisa cada minuto. A la hora configurada (hora de Lima) genera el reporte de los días
-// indicados y lo guarda como "auto_reporte_…". Si a esa hora hay otra consulta en curso,
-// lo intenta en los minutos siguientes (hasta 3 horas después).
-function ahoraLima() {
-  const p = Object.fromEntries(new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Lima', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).formatToParts(new Date()).map((x) => [x.type, x.value]));
-  return { fecha: `${p.year}-${p.month}-${p.day}`, hm: `${p.hour}:${p.minute}` };
-}
-const sumarDias = (f, n) => { const d = new Date(`${f}T12:00:00Z`); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
-setInterval(() => {
+// Resumen de cada reporte guardado para la grilla "Reportes guardados".
+// Se guarda en memoria y se recalcula solo si el archivo cambió.
+const cacheMeta = new Map();
+function metaReporte(f) {
+  const p = path.join(DATA, f);
+  const mtime = fs.statSync(p).mtimeMs;
+  const c = cacheMeta.get(f);
+  if (c && c.mtime === mtime) return c.meta;
+  const origen = f.startsWith('auto_') ? 'auto' : 'manual';
+  let meta;
   try {
-    const a = leerAjustes(); if (!a.auto.activa || !tokenCDS()) return;
-    const { fecha, hm } = ahoraLima();
-    if (a.auto.ultima === fecha || hm < a.auto.hora) return;
-    const [h1, m1] = a.auto.hora.split(':').map(Number); const [h2, m2] = hm.split(':').map(Number);
-    if ((h2 * 60 + m2) - (h1 * 60 + m1) > 180) return; // ventana de 3 horas
-    if (enCurso) return;
-    const desde = sumarDias(fecha, a.auto.desdeDias); const hasta = sumarDias(desde, a.auto.cantidadDias - 1);
-    a.auto.ultima = fecha; a.auto.ultimoResultado = `Iniciada ${fecha} ${hm} (${desde}${hasta !== desde ? ' a ' + hasta : ''})`; guardarAjustes(a);
-    console.log(`Consulta automática: ${desde} a ${hasta}`);
-    nuevoTrabajo(desde, hasta, 'auto');
-  } catch (e) { console.error('Consulta automática:', e.message); }
-}, 60000);
+    const r = normalizar(JSON.parse(fs.readFileSync(p, 'utf8')));
+    const vendidos = { cds: 0, pb: 0 }; let sinDato = 0;
+    r.dias.forEach((d) => d.rutas.forEach((ru) => ['cds', 'pb'].forEach((k) => (ru[k].salidas || []).forEach((s) => {
+      if (s.duplicadoDe) return;
+      if (s.vendidos == null) { if (k === 'cds') sinDato++; return; }
+      vendidos[k] += s.vendidos;
+    }))));
+    const norm = (x) => (Array.isArray(x) ? { incluidos: x, excluidos: [] } : x || null);
+    meta = { tipo: 'reporte', archivo: f, origen, rol: r.rol || null, desde: r.desde, hasta: r.hasta, dias: r.dias.length, generado: r.generado,
+      servicios: r.servicios ? { cds: norm(r.servicios.cds), pb: norm(r.servicios.pb) } : null, vendidos, sinDato };
+  } catch (e) { meta = { tipo: 'reporte', archivo: f, origen, error: 'No se pudo leer el archivo' }; }
+  cacheMeta.set(f, { mtime, meta });
+  return meta;
+}
 
 // ---------------- HTTP ----------------
 function json(res, code, obj, extra = {}) { res.writeHead(code, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store', ...extra }); res.end(JSON.stringify(obj)); }
@@ -263,38 +200,74 @@ http.createServer(async (req, res) => {
       const c = (req.headers.cookie || '').match(/sid=([a-f0-9]+)/); if (c) sesiones.delete(c[1]);
       return json(res, 200, { ok: true }, { 'set-cookie': 'sid=; Path=/; Max-Age=0' });
     }
-    if (req.method === 'POST' && u.pathname === '/api/consultar') {
-      const { desde, hasta } = await cuerpo(req);
-      const ok = (f) => /^\d{4}-\d{2}-\d{2}$/.test(f || '');
-      const h = hasta || desde;
-      if (!ok(desde) || !ok(h)) return json(res, 400, { error: 'Fechas inválidas' });
-      if (h < desde) return json(res, 400, { error: 'La fecha final es anterior a la inicial' });
-      if (desde !== h && ses.rol !== 'admin' && !leerAjustes().permitirRangoUsuarios) return json(res, 403, { error: 'La búsqueda por varios días está reservada al administrador.' });
-      if (fechasEntre(desde, h).length > MAX_DIAS) return json(res, 400, { error: `Máximo ${MAX_DIAS} días por consulta` });
+    // --- monitoreo por día ---
+    const fechaOk = (f) => /^\d{4}-\d{2}-\d{2}$/.test(f || '');
+    if (req.method === 'POST' && u.pathname === '/api/dias/iniciar') {
+      const { fecha } = await cuerpo(req);
+      if (!fechaOk(fecha)) return json(res, 400, { error: 'Fecha inválida' });
+      if (fecha !== hoyLima()) return json(res, 400, { error: 'Solo se puede monitorear el día de hoy.' });
+      if (monitor.existe(fecha)) return json(res, 200, { existe: true, ...monitor.estadoDia(fecha) });
       if (!tokenCDS()) return json(res, 400, { error: 'Falta el token de Cruz del Sur. Agrégalo en la rueda de configuración ⚙.' });
-      if (enCurso) return json(res, 409, { error: 'Ya hay una consulta en curso', id: enCurso });
-      return json(res, 200, { id: nuevoTrabajo(desde, h).id });
+      return json(res, 200, { id: monitor.iniciarDia(fecha, 'manual', ses.rol).id });
     }
+    if (req.method === 'POST' && u.pathname === '/api/dias/actualizar') {
+      const { fecha, ids, hora, ruta, desdeAhora } = await cuerpo(req);
+      if (!fechaOk(fecha)) return json(res, 400, { error: 'Fecha inválida' });
+      const que = Array.isArray(ids) ? { ids: ids.map(String) } : /^\d{2}:\d{2}$/.test(hora || '') ? { hora, ruta } : desdeAhora ? { desdeAhora: true, ruta } : null;
+      if (!que) return json(res, 400, { error: 'Indica qué actualizar.' });
+      try { return json(res, 200, monitor.actualizarAhora(fecha, que, ses.rol)); } catch (e) { return json(res, 400, { error: e.message }); }
+    }
+    // --- reporte al instante (pestaña /reportes): una foto del día de hoy ---
+    if (req.method === 'POST' && u.pathname === '/api/consultar') {
+      const hoy = hoyLima(); const b = await cuerpo(req);
+      // Cada usuario puede elegir los servicios de su reporte (sin tocar la configuración global).
+      let sel = null;
+      if (b.servicios) {
+        const lista = (x) => (Array.isArray(x) ? x.map(String).filter(Boolean).slice(0, 50) : []);
+        sel = { cds: lista(b.servicios.cds), pb: lista(b.servicios.pb) };
+        if (!sel.cds.length && !sel.pb.length) return json(res, 400, { error: 'Elige al menos un servicio para el reporte.' });
+      }
+      if ((!sel || sel.cds.length) && !tokenCDS()) return json(res, 400, { error: 'Falta el token de Cruz del Sur. Agrégalo en la rueda de configuración ⚙.' });
+      return json(res, 200, { id: monitor.generarReporte(hoy, hoy, ses.rol, 'manual', null, sel).id });
+    }
+    if (u.pathname === '/api/cola') return json(res, 200, monitor.estadoCola());
     if (req.method === 'POST' && u.pathname === '/api/cancelar') {
-      const t = enCurso && trabajos.get(enCurso); if (t) t.cancelar = true;
-      return json(res, 200, { ok: !!t });
+      if (ses.rol !== 'admin') return json(res, 403, { error: 'Solo el administrador puede cancelar o detener actualizaciones.' });
+      return json(res, 200, { ok: monitor.cancelar() });
     }
     if (u.pathname.startsWith('/api/estado/')) {
-      const t = trabajos.get(u.pathname.split('/').pop());
+      const t = monitor.trabajo(u.pathname.split('/').pop());
       if (!t) return json(res, 404, { error: 'No existe' });
-      const { resultado, ...resto } = t;
-      return json(res, 200, { ...resto, resultado: t.estado === 'listo' ? resultado : null });
+      return json(res, 200, t);
     }
-    if (u.pathname === '/api/historial') return json(res, 200, fs.readdirSync(DATA).filter((f) => f.endsWith('.json') && f !== 'ajustes.json').sort().reverse());
+    if (u.pathname === '/api/historial') {
+      const tipo = u.searchParams.get('tipo'); // 'dia' | 'reporte' | (vacío = todos)
+      const reportes = tipo === 'dia' ? [] : fs.readdirSync(DATA).filter((f) => f.endsWith('.json') && f !== 'ajustes.json' && !f.startsWith('dia_')).map(metaReporte);
+      const lista = [...(tipo === 'reporte' ? [] : monitor.metaDias()), ...reportes];
+      return json(res, 200, lista.sort((a, b) => String(b.desde || '').localeCompare(String(a.desde || '')) || String(b.generado || '').localeCompare(String(a.generado || ''))));
+    }
+    if (u.pathname.startsWith('/api/dias/')) {
+      const f = u.pathname.split('/').pop();
+      const d = fechaOk(f) && monitor.leerDia(f);
+      return d ? json(res, 200, d) : json(res, 404, { error: 'Ese día no está siendo monitoreado.' });
+    }
     if (u.pathname.startsWith('/api/historial/')) {
       const f = path.basename(decodeURIComponent(u.pathname.split('/').pop()));
       const p = path.join(DATA, f);
       if (f === 'ajustes.json' || !fs.existsSync(p)) return json(res, 404, { error: 'No existe' });
       const r = normalizar(JSON.parse(fs.readFileSync(p, 'utf8'))); r.archivo = f;
-      if (u.searchParams.get('descargar')) return json(res, 200, r, { 'content-disposition': `attachment; filename="${f}"` });
+      if (u.searchParams.get('descargar')) {
+        if (ses.rol !== 'admin') return json(res, 403, { error: 'Solo el administrador puede descargar el JSON.' });
+        return json(res, 200, r, { 'content-disposition': `attachment; filename="${f}"` });
+      }
       return json(res, 200, r);
     }
-    if (u.pathname === '/api/config') return json(res, 200, { maxDias: MAX_DIAS, enCurso, rol: ses.rol, auto: ses.rol === 'admin' ? leerAjustes().auto : undefined, permitirRango: ses.rol === 'admin' || leerAjustes().permitirRangoUsuarios, permitirRangoUsuarios: leerAjustes().permitirRangoUsuarios });
+    if (u.pathname === '/api/config') {
+      const M = leerAjustes().monitor;
+      return json(res, 200, { hoy: hoyLima(), enCurso: monitor.trabajoActivo(), rol: ses.rol,
+        monitor: ses.rol === 'admin' ? M : { activa: M.activa, perpetuo: M.perpetuo, actualizarSalidas: M.actualizarSalidas, hora: M.hora, minutosAntes: M.minutosAntes, vigDesde: M.vigDesde, vigHasta: M.vigHasta },
+        reporteAuto: (({ hechas, ...R }) => R)(leerAjustes().reporteAuto) });
+    }
 
     // --- descarga en Excel ---
     if (u.pathname.startsWith('/api/excel/')) {
@@ -311,6 +284,7 @@ http.createServer(async (req, res) => {
     // --- servicios a consultar (todos los usuarios) ---
     if (u.pathname === '/api/ajustes' && req.method === 'GET') return json(res, 200, leerAjustes());
     if (u.pathname === '/api/ajustes' && req.method === 'POST') {
+      if (ses.rol !== 'admin') return json(res, 403, { error: 'Solo el administrador puede cambiar los servicios a consultar.' });
       const { servicios } = await cuerpo(req);
       const a = leerAjustes();
       for (const emp of ['cds', 'pb']) {
@@ -325,28 +299,57 @@ http.createServer(async (req, res) => {
     // --- solo administrador ---
     const soloAdmin = u.pathname.startsWith('/api/admin/') || u.pathname === '/api/token';
     if (soloAdmin && ses.rol !== 'admin') return json(res, 403, { error: 'Solo el administrador puede hacer esto.' });
-    if (u.pathname === '/api/admin/permisos' && req.method === 'POST') {
-      const { permitirRangoUsuarios } = await cuerpo(req);
-      const a = leerAjustes(); a.permitirRangoUsuarios = !!permitirRangoUsuarios; guardarAjustes(a);
-      return json(res, 200, { permitirRangoUsuarios: a.permitirRangoUsuarios });
-    }
     if (u.pathname.startsWith('/api/admin/reportes/') && req.method === 'DELETE') {
       const f = path.basename(decodeURIComponent(u.pathname.split('/').pop()));
       const ruta = path.join(DATA, f);
       if (!f.endsWith('.json') || f === 'ajustes.json' || !fs.existsSync(ruta)) return json(res, 404, { error: 'No existe ese reporte' });
-      fs.unlinkSync(ruta);
+      const dia = f.match(/^dia_(\d{4}-\d{2}-\d{2})\.json$/);
+      if (dia) monitor.borrar(dia[1]); else fs.unlinkSync(ruta); // inmediato, aunque se esté actualizando
       return json(res, 200, { ok: true });
     }
-    if (u.pathname === '/api/admin/auto' && req.method === 'POST') {
-      const b = await cuerpo(req); const a = leerAjustes();
-      if (b.hora && !/^([01]\d|2[0-3]):[0-5]\d$/.test(b.hora)) return json(res, 400, { error: 'Hora inválida (usa HH:MM).' });
-      a.auto.activa = !!b.activa;
-      if (b.hora) a.auto.hora = b.hora;
-      if (b.desdeDias != null) a.auto.desdeDias = Math.max(0, Math.min(30, Number(b.desdeDias) || 0));
-      if (b.cantidadDias != null) a.auto.cantidadDias = Math.max(1, Math.min(MAX_DIAS, Number(b.cantidadDias) || 1));
-      guardarAjustes(a);
-      return json(res, 200, a.auto);
+    // Cambio de servicios aplicado también al día en curso (simular = solo mostrar qué pasaría).
+    if (u.pathname === '/api/admin/dias/servicios' && req.method === 'POST') {
+      const { fecha, simular } = await cuerpo(req);
+      if (!fechaOk(fecha)) return json(res, 400, { error: 'Fecha inválida' });
+      try { return json(res, 200, simular ? monitor.simularServicios(fecha) : monitor.aplicarServicios(fecha, ses.rol)); }
+      catch (e) { return json(res, 400, { error: e.message }); }
     }
+    if ((u.pathname === '/api/admin/dias/detener' || u.pathname === '/api/admin/dias/reanudar') && req.method === 'POST') {
+      const { fecha } = await cuerpo(req);
+      if (!fechaOk(fecha)) return json(res, 400, { error: 'Fecha inválida' });
+      try { (u.pathname.endsWith('detener') ? monitor.detener : monitor.reanudar)(fecha, ses.rol); return json(res, 200, monitor.estadoDia(fecha)); }
+      catch (e) { return json(res, 400, { error: e.message }); }
+    }
+    // Crons: cambios parciales (solo se tocan los campos enviados).
+    if ((u.pathname === '/api/admin/monitor' || u.pathname === '/api/admin/reporte-auto') && req.method === 'POST') {
+      const b = await cuerpo(req); const a = leerAjustes();
+      const esMon = u.pathname.endsWith('monitor'); const C = esMon ? a.monitor : a.reporteAuto;
+      const horaOk = (h) => /^([01]\d|2[0-3]):[0-5]\d$/.test(h || '');
+      if ('activa' in b) C.activa = !!b.activa;
+      if ('perpetuo' in b) C.perpetuo = !!b.perpetuo;
+      for (const k of ['vigDesde', 'vigHasta']) if (k in b) { if (b[k] && !fechaOk(b[k])) return json(res, 400, { error: 'Fechas inválidas.' }); C[k] = b[k] || null; }
+      if (!C.perpetuo && !C.vigDesde && !C.vigHasta) return json(res, 400, { error: 'Indica desde y/o hasta, o elige “Perpetuo”.' });
+      if (!C.perpetuo && C.vigDesde && C.vigHasta && C.vigHasta < C.vigDesde) return json(res, 400, { error: 'La fecha "hasta" es anterior a "desde".' });
+      if (esMon) {
+        if ('hora' in b) { if (!horaOk(b.hora)) return json(res, 400, { error: 'Hora inválida (usa HH:MM).' }); C.hora = b.hora; }
+        if ('actualizarSalidas' in b) C.actualizarSalidas = !!b.actualizarSalidas;
+        if ('minutosAntes' in b) {
+          const mins = String(b.minutosAntes ?? '').split(/[,;\s]+/).filter(Boolean).map(Number);
+          if (!mins.length || mins.some((x) => !Number.isInteger(x) || x < 1 || x > 600)) return json(res, 400, { error: 'Minutos antes: números enteros entre 1 y 600, separados por coma (ej. 30,20,10).' });
+          C.minutosAntes = [...new Set(mins)].sort((x, y) => y - x);
+        }
+        if ('reintentos' in b) C.reintentos = Math.max(1, Math.min(10, Number(b.reintentos) || 3));
+        if ('esperaReintentoSeg' in b) C.esperaReintentoSeg = Math.max(10, Math.min(600, Number(b.esperaReintentoSeg) || 60));
+      } else if ('horas' in b) {
+        const hs = [...new Set(String(b.horas || '').split(/[,;\s]+/).filter(Boolean))].sort();
+        if (!hs.length || !hs.every(horaOk)) return json(res, 400, { error: 'Horas inválidas: usa HH:MM separadas por coma (ej. 08:00, 14:00, 20:00).' });
+        C.horas = hs;
+      }
+      guardarAjustes(a);
+      const { hechas, ...salida } = C;
+      return json(res, 200, esMon ? C : salida);
+    }
+    if (u.pathname === '/api/admin/logs') return json(res, 200, { lineas: LOGS, max: MAX_LOGS });
     if (u.pathname === '/api/admin/claves' && req.method === 'GET') return json(res, 200, { claves: contrasenas() });
     if (u.pathname === '/api/admin/claves' && req.method === 'POST') {
       const { clave } = await cuerpo(req);
@@ -379,16 +382,16 @@ http.createServer(async (req, res) => {
       const nuevo = String(token || '').trim().replace(/^authorization:\s*/i, '');
       const aProbar = nuevo || tokenCDS();
       if (!aProbar) return json(res, 400, { error: 'Pega un token primero.' });
-      if (enCurso && !soloProbar) return json(res, 409, { error: 'Espera a que termine la consulta en curso para cambiar el token.' });
+      if (monitor.ocupado() && !soloProbar) return json(res, 409, { error: 'Espera a que termine la consulta en curso para cambiar el token.' });
       let prueba;
       try { prueba = await probarToken(aProbar); } catch (e) { return json(res, 400, { error: `El token no funcionó: ${e.message}` }); }
       if (!soloProbar && nuevo) guardarEnv('CDS_TOKEN', nuevo);
       return json(res, 200, { ok: true, detalle: prueba.detalle, guardado: !soloProbar && !!nuevo });
     }
 
-    const rel = u.pathname === '/' ? 'index.html' : path.normalize(u.pathname.slice(1)).replace(/^(\.\.[/\\])+/, '');
+    const rel = u.pathname === '/' || u.pathname === '/reportes' ? 'index.html' : path.normalize(u.pathname.slice(1)).replace(/^(\.\.[/\\])+/, '');
     return archivo(res, rel);
-  } catch (e) { json(res, 500, { error: String(e.message || e) }); }
+  } catch (e) { console.error(`Error en ${req.method} ${u.pathname}:`, e); json(res, 500, { error: String(e.message || e) }); }
 }).listen(PUERTO, HOST, () => {
   console.log(`\nMonitor de buses: http://${HOST === '0.0.0.0' ? 'localhost' : HOST}:${PUERTO}`);
   if (!claveAdmin()) console.log('AVISO: falta ADMIN_PASSWORD en .env. Sin ella no se pueden administrar contraseñas ni el token desde la página.');
