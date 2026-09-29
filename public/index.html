@@ -37,6 +37,59 @@
   .switch button{background:transparent;padding:8px 14px;border-radius:8px;color:var(--muted)}
   .switch button.on{background:#fff;color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.12)}
   .oculto{display:none!important}
+  /* franja fija con el día que se está viendo */
+  .banner{position:sticky;top:0;z-index:20;background:#fff;border:1px solid var(--line);border-left:8px solid var(--cds);border-radius:14px;padding:12px 16px 0;margin-bottom:14px;box-shadow:0 6px 18px rgba(16,24,40,.08)}
+  .banner.b-mon{border-left-color:#7F56D9;background:linear-gradient(90deg,#F9F5FF 0%,#fff 45%)}
+  .banner.b-fin{border-left-color:#067647;background:linear-gradient(90deg,#ECFDF3 0%,#fff 45%)}
+  .banner.b-det{border-left-color:#475467;background:linear-gradient(90deg,#F2F4F7 0%,#fff 45%)}
+  .banner.b-rep{border-left-color:var(--cds);background:linear-gradient(90deg,var(--cds-soft) 0%,#fff 45%)}
+  .bn-fila{display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:space-between}
+  .bn-dia{display:flex;flex-direction:column}
+  .bn-sup{font-size:12px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+  .bn-fecha{font-size:24px;font-weight:800;line-height:1.2}
+  .bn-cuando{display:inline-block;font-size:13px;vertical-align:4px;background:#7F56D9;color:#fff;border-radius:99px;padding:2px 10px;letter-spacing:.05em;text-transform:none}
+  .b-fin .bn-cuando{background:#067647} .b-rep .bn-cuando{background:var(--cds)}
+  .banner .tabs{border:0;margin:6px 0 0}
+  .banner .tabs button{padding:10px 18px;font-size:16px}
+  .banner .vistas{margin:6px 0 8px}
+  .tagt.mon{background:#7F56D9;color:#fff;border-color:#7F56D9}
+  .tagt.viendo{background:var(--cds);color:#fff;border-color:var(--cds)}
+  .diacab{padding:12px 16px}
+  .dc-fila{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .dc-fila .estado{color:#344054;font-size:14px}
+  .dc-datos{margin-left:auto;font-size:14px;color:#344054}
+  .descargas{display:inline-flex;gap:6px} .descargas .btn-sec{padding:6px 12px;font-size:14px}
+  .dc-det{margin-top:10px;padding-top:10px;border-top:1px dashed var(--line);font-size:14px;color:#344054;display:flex;flex-direction:column;gap:6px}
+  details.menu{position:relative} details.menu summary{list-style:none;cursor:pointer;border:1px solid var(--line);border-radius:8px;padding:4px 12px;font-weight:800;color:#344054;background:#fff}
+  details.menu summary::-webkit-details-marker{display:none}
+  .menu-lista{position:absolute;right:0;top:calc(100% + 6px);background:#fff;border:1px solid var(--line);border-radius:10px;box-shadow:0 10px 30px rgba(16,24,40,.18);padding:8px;display:flex;flex-direction:column;gap:6px;z-index:30;min-width:220px}
+  .conayuda{cursor:help;border-bottom:1px dotted #98a2b3}
+  .info{cursor:help;color:var(--muted);font-weight:700;margin-left:4px;text-transform:none}
+  th .info{color:#fff;opacity:.85}
+  small.cap{color:var(--muted);font-weight:600;margin-left:2px} small.nsal{display:block;font-size:11px;color:var(--muted)}
+  tr.togterm td{background:#F9FAFB;text-align:left;padding:6px 12px}
+  span.viejo{color:#B54708;font-weight:800;cursor:help}
+  .servmini{margin-top:10px;font-size:14px;color:#344054;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .svmini{cursor:help;white-space:nowrap;font-size:12px}
+  .hist tr.abierto td{background:#EEF4FF!important} .hist tr.abierto td:first-child{box-shadow:inset 5px 0 0 var(--cds)!important}
+  .cronmini{color:#475467;font-size:14px;margin-left:4px}
+  .crondet{display:flex;flex-direction:column;gap:6px;padding-top:8px;border-top:1px dashed var(--line)}
+  #tip hr{border:0;border-top:1px solid var(--line);margin:6px 0}
+  /* en el celular la franja del día sigue fija pero compacta */
+  @media (max-width:760px){
+    .banner{padding:8px 10px 0;border-left-width:6px}
+    .bn-sup{display:none} .bn-fecha{font-size:17px}
+    .banner .tabs button{padding:8px 12px;font-size:14px}
+    .banner .vistas{overflow-x:auto;max-width:100%;flex-wrap:nowrap} .banner .vistas button{white-space:nowrap;padding:6px 10px;font-size:13px}
+    .bn-fila{gap:6px}
+  }
+  /* barra de estado: token, automático, qué se está haciendo, próxima lectura */
+  .sistema{background:#fff;border-bottom:1px solid var(--line)}
+  .sisbarra{max-width:1600px;margin:0 auto;padding:7px 16px;display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13px;color:#344054;align-items:center}
+  .sisbarra:empty{display:none}
+  .sis.ok{color:#067647;font-weight:700} .sis.mal{color:#B42318;font-weight:700} .sis.apag{color:#98a2b3} .sis.act{color:#6941C6;font-weight:600}
+  .sisalerta{background:#FEF3F2;border-bottom:1px solid #FECDCA;color:#B42318;padding:10px 16px;font-size:14px;text-align:center}
+  .sisalerta .btn-adm{margin-left:8px}
   /* progreso */
   #progreso{margin-top:14px}
   .pbar{height:14px;background:#EEF0F3;border-radius:99px;overflow:hidden}
@@ -119,6 +172,9 @@
   .servtit.cds{background:var(--cds)} .servtit.pb{background:var(--pb)}
   .servs label{display:flex;gap:8px;align-items:center;padding:5px 4px;font-size:14px;cursor:pointer}
   .servs .todos{font-size:12px;color:var(--muted)}
+  .servfila{display:flex;align-items:center;gap:8px}
+  .capbus{margin-left:auto;font-size:12px;color:var(--muted);display:inline-flex;align-items:center;gap:4px}
+  .capbus input{width:58px;font:inherit;padding:3px 6px;border:1px solid var(--line);border-radius:6px;text-align:center}
   .msg{font-size:14px;margin-top:10px;min-height:18px}
   .claves{display:flex;flex-direction:column;gap:6px;max-height:240px;overflow:auto;margin-bottom:10px}
   .claves .fila{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:8px;padding:6px 10px}
@@ -190,6 +246,38 @@
   .v-cerr{font-size:13px} .v-cerr2{font-size:12px;opacity:.45}
   .v-ok{color:#067647} .v-err{color:var(--pb)} .v-omi{color:#98a2b3} .v-cola{font-size:13px} .v-pen{color:#98a2b3;font-weight:400}
   .estadofila{font-size:13px;font-weight:700;color:#475467;white-space:nowrap}
+  /* lecturas antes de salir: una etiqueta por lectura, con texto (no solo un ícono) */
+  td.lecturas{text-align:left;white-space:normal;min-width:210px}
+  .vfila{display:flex;gap:4px;flex-wrap:wrap;align-items:center;margin:2px 0}
+  .vchip{display:inline-block;font-size:12px;font-weight:700;padding:2px 8px;border-radius:99px;border:1px solid;white-space:nowrap;cursor:help;line-height:1.5}
+  .vchip.v-ok{background:#ECFDF3;color:#067647;border-color:#ABEFC6}
+  .vchip.v-err{background:#FEF3F2;color:#B42318;border-color:#FECDCA}
+  .vchip.v-cerr{background:#FFFAEB;color:#B54708;border-color:#FEDF89}
+  .vchip.v-omi{background:#F9FAFB;color:#98A2B3;border-color:#EAECF0;text-decoration:line-through}
+  .vchip.v-pen{background:#fff;color:#475467;border:1px dashed #98A2B3;font-weight:600}
+  .vchip.v-cola{background:#F4EBFF;color:#6941C6;border-color:#D6BBFB}
+  .vley{margin:8px 0 0;line-height:2} .vley .vchip{cursor:default}
+  small.viejo{color:#B54708;font-weight:700;margin-top:3px}
+  tr.term td{opacity:.55} tr.term:hover td{opacity:1}
+  label.ocultar{display:flex;gap:6px;align-items:center;font-size:13px;color:#475467;cursor:pointer;margin-left:auto}
+  .curvasel{margin-left:auto;font-size:13px;color:#475467;display:flex;gap:6px;align-items:center}
+  .curvasel select{min-width:220px;padding:6px 8px}
+  .curva .serie{cursor:help} .curva .serie .l{opacity:.4;transition:opacity .15s}
+  .curva .serie:hover .l{opacity:1;stroke-width:3}
+  .ok-t2{color:#067647} .cerr-t{color:#B54708;font-weight:700}
+  /* tablas en el celular: cada fila se vuelve una tarjeta */
+  @media (max-width:760px){
+    .tabla-resp{max-height:none;border:0}
+    .tabla-resp table,.tabla-resp tbody,.tabla-resp tr,.tabla-resp td{display:block;width:100%}
+    .tabla-resp tr.cab{display:none}
+    .tabla-resp tr{border:1px solid var(--line);border-radius:12px;margin:0 0 10px;padding:6px 10px;background:#fff}
+    .tabla-resp td{display:flex;justify-content:flex-start;align-items:baseline;gap:6px;border:0;padding:5px 0;white-space:normal;text-align:right;background:none!important}
+    .tabla-resp td::before{content:attr(data-label);font-size:12px;color:var(--muted);font-weight:700;text-align:left;margin-right:auto}
+    .tabla-resp small.nsal{display:inline}
+    .tabla-resp td:empty{display:none}
+    .tabla-resp td.lecturas{display:block;text-align:left} .tabla-resp td.lecturas::before{display:block;margin-bottom:4px}
+    .tabla-resp td.boton::before{content:''}
+  }
   /* completado */
   .tagt.fin{background:#067647;color:#fff;border-color:#067647;letter-spacing:.03em}
   .finbar{background:#ECFDF3;border:1px solid #ABEFC6;color:#05603A;border-radius:10px;padding:12px 14px;font-size:15px;margin-top:14px}
@@ -201,6 +289,16 @@
   .diachip.pasado{background:#fff;color:#98a2b3;border-color:var(--line)}
   .diachip.hoy{background:var(--cds);color:#fff;border-color:var(--cds)}
   .diachip.hecho{background:#ECFDF3;color:#05603A;border-color:#ABEFC6}
+  /* morado = día que se está monitoreando ahora (hoy o por adelantado) */
+  .diachip.mon{background:#F4EBFF;color:#6941C6;border-color:#B692F6;font-weight:700}
+  .diachip.hoy.mon{background:#7F56D9;color:#fff;border-color:#7F56D9}
+  .diachip.pend{background:#fff;color:#6941C6;border:1px dashed #B692F6}
+  .tagt.mon{background:#7F56D9;color:#fff;border-color:#7F56D9}
+  .tagt.monf{background:#F4EBFF;color:#6941C6;border-color:#B692F6}
+  .tagt.pend{background:#fff;color:#6941C6;border:1px dashed #B692F6}
+  tr.fila.enmon td:first-child{box-shadow:inset 4px 0 0 #7F56D9}
+  .leyenda{display:flex;gap:10px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-top:4px}
+  .leyenda .diachip{font-size:11px;padding:1px 6px}
   .pista{font-size:13px;margin-top:4px}
   /* configuración de monitoreo (admin) */
   .modal .caja{max-height:calc(100vh - 32px);overflow:auto}
@@ -210,7 +308,9 @@
   .icono-sec{width:46px;flex:none;text-align:center;font-size:22px;line-height:26px}
   .cfgcuerpo{margin-top:6px;padding-left:58px}
   .frases .frase{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:8px 0;font-size:14px}
-  .frases .frase input{width:64px;text-align:center;font:inherit;font-weight:700;padding:6px;border:1px solid var(--line);border-radius:8px}
+  .frases .frase input:is([type=number],[type=text],[type=time],[type=date]){width:64px;text-align:center;font:inherit;font-weight:700;padding:6px;border:1px solid var(--line);border-radius:8px}
+  .frases .frase input[type=time]{width:130px!important} .frases .frase input[type=date]{width:160px!important}
+  .frases .frase label{display:inline-flex;gap:5px;align-items:center;cursor:pointer}
   .frases .frase .ayuda{margin:0}
   @media (max-width:560px){.cfgcuerpo{padding-left:0}}
   .toggle{position:relative;display:inline-block;width:46px;height:26px;flex:none;cursor:pointer}
@@ -283,6 +383,7 @@
   <nav class="secciones"><a href="/" id="navMon">⏱ Monitoreo diario</a><a href="/reportes" id="navRep">📋 Reporte al instante</a></nav>
   <div class="hdr-der"><button class="icono soloadminb oculto" id="btnLogs" title="Consola del servidor (solo admin)">📜 Ver logs</button><button class="icono" id="btnSonido" title="Silenciar / activar el sonido de los avisos">🔔</button><button class="icono" id="btnCfg" title="Configuración">⚙ Configuración</button><button class="icono" id="btnSalir" title="Cerrar sesión">Salir</button></div>
 </header>
+<div id="sistema" class="sistema"></div>
 <main>
   <section class="card">
     <a class="volver solorep" href="/">← Volver al monitoreo diario</a>
@@ -294,9 +395,6 @@
       <!-- reporte al instante -->
       <button class="btn-main btn-grande solorep" id="btnGenerar">📸 Generar reporte</button>
       <!-- descargas -->
-      <button class="btn-sec soloadminb oculto" id="btnCsv" disabled>Exportar CSV</button>
-      <button class="btn-sec" id="btnExcel" disabled>⬇ Descargar Excel</button>
-      <button class="btn-sec soloadminb oculto" id="btnJson" disabled title="Datos completos en JSON">JSON</button>
     </div>
     <div class="cron" id="cron"></div>
     <div class="selserv" id="selServ"></div>
@@ -311,7 +409,8 @@
   <section class="card" id="cardHist">
     <div class="histcab" id="histCab" title="Mostrar / ocultar">
       <span class="flecha">▾</span><h3 class="sec" id="histTitulo">Días monitoreados</h3><span class="ayuda" id="histCuenta" style="margin:0"></span>
-      <span class="switch" id="histFiltro" style="margin-left:auto"><button data-f="todos" class="on">Todos</button><button data-f="auto">⏱ Automáticos</button><button data-f="manual">👤 Usuario</button></span>
+      <button class="btn-sec solomon" id="btnHistorico" title="Todos los días monitoreados en un Excel: una fila por salida con su último dato" style="margin-left:auto;padding:6px 12px;font-size:13px">⬇ Excel histórico</button>
+      <span class="switch" id="histFiltro"><button data-f="todos" class="on">Todos</button><button data-f="auto">⏱ Automáticos</button><button data-f="manual">👤 Usuario</button></span>
     </div>
     <div id="histCuerpo"><div class="tabla-wrap hist"><table id="histTabla"></table></div></div>
   </section>
@@ -345,7 +444,7 @@
 </div></div>
 <div class="modal oculto" id="modalCfg"><div class="caja">
   <h3>⚙ Configuración</h3>
-  <div class="tabs cfgtabs"><button data-cfg="serv" class="on">Servicios a consultar</button><button data-cfg="token" class="soloadmin">Token Cruz del Sur</button><button data-cfg="claves" class="soloadmin">Contraseñas</button><button data-cfg="auto" class="soloadmin">Monitoreo</button></div>
+  <div class="tabs cfgtabs"><button data-cfg="serv" class="on">Servicios a consultar</button><button data-cfg="token" class="soloadmin">Token Cruz del Sur</button><button data-cfg="claves" class="soloadmin">Contraseñas</button><button data-cfg="auto" class="soloadmin">⏱ Automático</button></div>
 
   <div data-panel="serv">
     <p class="ayuda" style="margin-top:0">Solo se consultan los servicios marcados. Menos servicios = menos consultas a Cruz del Sur = más rápido. La selección se guarda en el servidor y vale para el monitoreo diario, el cron del reporte y como selección inicial del reporte al instante.</p>
@@ -365,17 +464,23 @@
   </div>
 
   <div data-panel="auto" class="oculto">
-    <p class="ayuda" style="margin:0 0 10px">El encendido, la hora y la vigencia (perpetuo o entre fechas) de cada cron se programan en su propia pantalla: <b>⏱ Cron del monitoreo diario</b> y <b>⏱ Cron del reporte al instante</b>.</p>
+    <p class="ayuda" style="margin:0 0 10px">Todo lo que se hace solo, en un lugar. El interruptor de cada uno también está en su pantalla.</p>
+    <div class="cfgsec">
+      <div><b>⏱ Monitoreo automático</b></div>
+      <div class="cfgcuerpo frases" style="padding-left:0">
+        <div class="frase"><label class="toggle"><input type="checkbox" id="autoMonOn"><i></i></label> Iniciar solo el monitoreo de cada día a las <input type="time" id="autoHora" style="width:110px"> <span class="ayuda">(hora de Lima)</span></div>
+        <div class="frase">Termina: <label><input type="radio" name="autoMonFin" value="no"> sin fecha de fin</label> <label><input type="radio" name="autoMonFin" value="si"> el día</label> <input type="date" id="autoMonHasta" style="width:auto;min-width:150px"></div>
+      </div>
+    </div>
     <div class="cfgsec" id="secSal">
       <div class="cfgcab"><label class="toggle"><input type="checkbox" id="autoActSal"><i></i></label>
-        <div><b>Actualizar cada salida antes de que parta</b><div class="ayuda" style="margin:2px 0 0">Para todos los días monitoreados dentro de la vigencia del cron del monitoreo (automáticos o iniciados a mano). Al partir la última salida, el día queda <b>COMPLETADO</b> y no se consulta más.</div></div></div>
-      <div class="cfgcuerpo">
-        <div class="autogrid">
-          <label class="campo">Minutos antes de cada salida<input type="text" id="autoMins" placeholder="180,120,60,20" style="width:150px"></label>
-          <label class="campo">Reintentos si falla<input type="number" id="autoReint" min="1" max="10" style="width:110px"></label>
-          <label class="campo">Espera entre reintentos (seg)<input type="number" id="autoEspera" min="10" max="600" style="width:110px"></label>
-        </div>
-        <div class="presets"><span class="ayuda" style="margin:0">Rápido:</span><button data-mins="180,120,60,20">3 h · 2 h · 1 h · 20 min</button><button data-mins="30,20,10">30 · 20 · 10</button><button data-mins="60,30,15,5">60 · 30 · 15 · 5</button><button data-mins="20,10">20 · 10</button><button data-mins="15">15</button></div>
+        <div><b>Leer cada salida antes de que parta</b><div class="ayuda" style="margin:2px 0 0">Vale para todos los días monitoreados. Al partir la última salida, el día queda <b>COMPLETADO</b> y no se consulta más.</div></div></div>
+      <div class="cfgcuerpo frases" style="padding-left:0">
+        <div class="frase">Cruz del Sur: leer <input type="text" id="autoMins" placeholder="180,120,70,40" style="width:150px"> minutos antes de cada salida</div>
+        <div class="frase">Peru Bus: <label><input type="checkbox" id="autoPbIgual"> los mismos que Cruz del Sur</label> <span id="autoPbPropio">· o leer <input type="text" id="autoMinsPb" placeholder="180,120,70,40" style="width:150px"> minutos antes</span></div>
+        <div class="frase">La venta online cierra: Cruz del Sur <input type="number" id="autoCierreCds" min="0" max="180"> min · Peru Bus <input type="number" id="autoCierrePb" min="0" max="180"> min antes de salir <span class="ayuda">(después no se programa ninguna lectura: ya no hay datos)</span></div>
+        <div class="frase">Si una lectura falla: reintentar <input type="number" id="autoReint" min="1" max="10"> veces, cada <input type="number" id="autoEspera" min="10" max="600"> segundos</div>
+        <div class="presets"><span class="ayuda" style="margin:0">Rápido:</span><button data-mins="180,120,70,40">3 h · 2 h · 70 min · 40 min</button><button data-mins="180,120,60,40">3 h · 2 h · 1 h · 40 min</button><button data-mins="120,60,40">2 h · 1 h · 40 min</button></div>
         <div class="vigprev" id="minsPrev"></div>
       </div>
     </div>
@@ -389,10 +494,19 @@
       </div>
     </div>
     <div class="cfgsec">
-      <div><b>Reporte al instante</b><div class="ayuda" style="margin:2px 0 0">Hasta cuántos días adelante se puede elegir la fecha del reporte (0 = solo hoy).</div></div>
-      <div class="cfgcuerpo frases" style="padding-left:0"><div class="frase">Permitir elegir hasta <input type="number" id="autoRepFut" min="0" max="60"> días adelante <span class="ayuda">(0 = solo hoy)</span></div></div>
+      <div><b>📸 Reporte al instante</b></div>
+      <div class="cfgcuerpo frases" style="padding-left:0">
+        <div class="frase"><label class="toggle"><input type="checkbox" id="autoRepOn"><i></i></label> Generar solo una foto de hoy a las <input type="text" id="autoRepHoras" placeholder="08:00, 14:00, 20:00" style="width:190px"></div>
+        <div class="frase">Termina: <label><input type="radio" name="autoRepFin" value="no"> sin fecha de fin</label> <label><input type="radio" name="autoRepFin" value="si"> el día</label> <input type="date" id="autoRepHasta" style="width:auto;min-width:150px"></div>
+        <div class="frase">Al generar uno a mano, permitir elegir hasta <input type="number" id="autoRepFut" min="0" max="60"> días adelante <span class="ayuda">(0 = solo hoy)</span></div>
+      </div>
     </div>
-    <div class="estado-token" id="autoEstado"></div>
+    <div class="cfgsec">
+      <div><b>🧹 Limpieza</b></div>
+      <div class="cfgcuerpo frases" style="padding-left:0">
+        <div class="frase">Borrar los reportes al instante con más de <input type="number" id="autoLimpieza" min="0" max="3650"> días <span class="ayuda">(0 = nunca). Los días monitoreados no se borran.</span></div>
+      </div>
+    </div>
     <div id="msgAuto" class="msg"></div>
     <div class="acciones"><button class="btn-sec" data-cerrar>Cerrar</button><button class="btn-main" id="btnGuardarAuto">Guardar</button></div>
   </div>
@@ -427,6 +541,11 @@ $('#reporte').innerHTML = MODO==='monitor'
 const DIAS = ['dom','lun','mar','mié','jue','vie','sáb'];
 const DIAS_L = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
 let rep = null, rutaSel = null, diaSel = null;
+const pref = (k, def) => { try { const v = localStorage.getItem(k); return v == null ? def : v; } catch(_) { return def; } };
+const guardarPref = (k, v) => { try { localStorage.setItem(k, v); } catch(_){} };
+let OCULTAR_TERM = pref('ocultarTerm', '1') === '1';      // salidas que ya cerraron o partieron: ocultas por defecto
+let VISTA = pref('vista', 'tabla');                       // tabla | grafico | franjas | curva
+let CRON_ABIERTO = pref('cronAbierto', '0') === '1', DC_ABIERTO = pref('detDia', '0') === '1';
 let ROL = 'usuario', MON = null, RAUTO = null;
 
 // ---------------- utilidades ----------------
@@ -439,6 +558,28 @@ const esc = s => String(s??'').replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>
 const enMin = t => { const m = Math.round((t - Date.now())/60000); return m <= 0 ? 'ahora' : m < 60 ? `en ${m} min` : `en ${Math.floor(m/60)} h ${m%60} min`; };
 const EMP = {cds:'Cruz del Sur', pb:'Peru Bus'};
 const pillEmp = e => e ? `<span class="pill ${e}">${e==='cds'?'CDS':'PB'}</span>` : '';
+
+// ---------------- barra de estado ----------------
+let SIS = null;
+async function refrescarSistema(){
+  try { SIS = await (await fetch('/api/sistema')).json(); } catch(_) { return; }
+  if(!SIS || !SIS.token) return;
+  const t = SIS.token, partes = [], mal = !t.configurado || t.ok === false;
+  partes.push(!t.configurado ? '<span class="sis mal">🔑 Falta el token</span>'
+    : t.ok === false ? `<span class="sis mal">🔑 Token rechazado${t.t?` desde las ${hm(t.t)}`:''}</span>`
+    : `<span class="sis ok" title="${t.t?`Última respuesta correcta de Cruz del Sur: ${fh(t.t)}`:'Todavía no se ha consultado Cruz del Sur'}">🔑 Token OK</span>`);
+  partes.push(SIS.cron.activa ? `<span class="sis">⏱ Monitoreo automático a las ${SIS.cron.hora}</span>` : '<span class="sis apag">⏱ Monitoreo automático apagado</span>');
+  const a = SIS.actual;
+  partes.push(a ? `<span class="sis act"><span class="spin"></span> ${a.desc ? esc(a.desc) : `${a.tipo==='programada'?'Lectura programada':'Actualizando'}: ${a.n} salida(s) del ${fCorta(a.fecha)}`}</span>` : '<span class="sis">💤 Nada en curso</span>');
+  if(SIS.reporte) partes.push('<span class="sis act">📸 Generando un reporte</span>');
+  if(SIS.pendientes) partes.push(`<span class="sis">⏳ ${SIS.pendientes} en cola</span>`);
+  if(SIS.fondo) partes.push(`<span class="sis" title="Días siguientes o actualizaciones completas: esperan un momento sin lecturas cercanas">🌙 ${SIS.fondo} tarea(s) esperando un buen momento</span>`);
+  const pr = SIS.proxima; if(pr) partes.push(`<span class="sis">Próxima lectura: <b>${hm(pr.t)}</b> · ${EMP[pr.emp]||''} ${pr.hora}${pr.fecha!==hoyLima()?` del ${fCorta(pr.fecha)}`:''} · ${enMin(Date.parse(pr.t))}</span>`);
+  $('#sistema').innerHTML = (mal ? `<div class="sisalerta">⚠ <b>${!t.configurado ? 'Falta el token de Cruz del Sur' : 'Cruz del Sur rechazó el token'}</b>${t.error?` (${esc(t.error)})`:''}. Sin un token válido no se lee Cruz del Sur: ni el monitoreo ni los reportes. ${ROL==='admin'?'<button class="btn-adm" id="sisToken">Cambiar el token</button>':'Avísale al administrador.'}</div>` : '')
+    + `<div class="sisbarra">${partes.join('')}</div>`;
+  const b = $('#sisToken'); if(b) b.onclick = () => abrirCfg('token');
+}
+setInterval(refrescarSistema, 10000);
 
 // ---------------- controles ----------------
 // El monitoreo se inicia siempre con el día de hoy (hora de Lima); el reporte al instante puede ser de hoy o de un día próximo.
@@ -472,12 +613,15 @@ $('#btnCancelar').onclick = async () => { if(await preguntar({ titulo: '⏹ Canc
 fetch('/api/config').then(r=>r.json()).then(c=>{
   ROL=c.rol; MON=c.monitor; RAUTO=c.reporteAuto; pintarHoy(); if(MODO==='monitor') cargarSelServ();
   if(ROL==='admin'){ $$('.soloadminb').forEach(b=>b.classList.remove('oculto')); $('.hdr-der').insertAdjacentHTML('afterbegin','<span class="rolpill">ADMIN</span>'); }
-  pintarHist(); pintarCron(); if(rep) pintar();
+  pintarHist(); pintarCron(); refrescarSistema(); if(rep) pintar();
   // Cada pantalla sigue solo su propio trabajo (monitoreo o reporte al instante).
   const propio = c.enCurso && c.enCurso[MODO==='monitor' ? 'monitor' : 'reporte']; if(propio) seguir(propio);
 });
 
+const hoyExiste = () => HIST.find(m => m.tipo==='dia' && m.fecha===hoyLima() && !m.pendiente && !m.error);
+function pintarBtnIniciar(){ const b = $('#btnIniciar'); if(MODO!=='monitor' || b.textContent==='Consultando…') return; b.textContent = TXT_PRINCIPAL(); b.title = hoyExiste() ? 'Abrir el monitoreo de hoy' : 'Hace el recorrido inicial del día y empieza a monitorearlo'; }
 $('#btnIniciar').onclick = async () => {
+  const ya = hoyExiste(); if(ya) return abrir(ya.archivo, true);
   const fecha = hoyLima();
   const r = await post('/api/dias/iniciar',{fecha}); const j = await r.json();
   if(!r.ok) return alert(j.error);
@@ -507,79 +651,52 @@ const diasEntre = (desde, hasta) => { const out=[]; for(let f=desde; f<=hasta &&
 const fAnio = f => `${fCorta(f)}/${f.slice(0,4)}`;
 const enDias = f => { const n = diasEntre(hoyLima(), f).length - 1; return n === 1 ? 'mañana' : `en ${n} días`; };
 // Próxima actualización total de un día: {t, horas} o {enCola}. Es aproximada: espera un buen momento.
-const txtRefresco = p => p.enCola ? '<b>↻ total</b><small>esperando un buen momento</small>'
-  : `<b>↻ total ${hm(p.t)}–${hm(p.hasta)}</b><small>${Date.parse(p.t) <= Date.now() ? 'en cuanto haya un buen momento' : enMin(Date.parse(p.t))} · cada ${p.min} a ${p.max} h</small>`;
+const txtRefresco = p => `<span class="conayuda" ${tipA(`<h4>↻ Actualización completa</h4>Relee todas las salidas del día cada ${p.min} a ${p.max} h, en un momento sin lecturas cercanas.<br>${p.enCola ? 'Ahora: en cola, esperando un buen momento.' : `Próxima: entre las ${hm(p.t)} y las ${hm(p.hasta)}.`}`)}>↻ completa ${p.enCola ? 'en cola' : `~${hm24(Date.parse(p.t))}`}</span>`;
 function chipsDias(desde, hasta){
   const l = diasEntre(desde, hasta); if(!l.length || l.length > 62) return '';
-  const hoy = hoyLima(), hechos = new Set(HIST.map(m=>m.fecha||m.desde));
-  return `<div class="diachips">${l.map(f=>`<span class="diachip ${f<hoy?'pasado':''} ${f===hoy?'hoy':''} ${hechos.has(f)&&f!==hoy?'hecho':''}" title="${fLarga(f)}${hechos.has(f)?' · con datos':''}">${fCorta(f)}${hechos.has(f)?' ✔':''}</span>`).join('')}</div>`;
+  const hoy = hoyLima(), porF = new Map(HIST.map(m=>[m.fecha||m.desde, m]));
+  const mon = MODO==='monitor';
+  const chip = f => { const m = porF.get(f), st = !m ? '' : m.pendiente ? 'pend' : mon && enMonitoreo(m) ? 'mon' : 'hecho';
+    const txt = st==='pend' ? ' · recorrido inicial en cola' : st==='mon' ? ' · en monitoreo' : st==='hecho' ? ' · con datos' : '';
+    return `<span class="diachip ${f<hoy?'pasado':''} ${f===hoy?'hoy':''} ${st}" title="${fLarga(f)}${txt}">${fCorta(f)}${st==='pend'?' ⏳':st==='mon'?' ●':st?' ✔':''}</span>`; };
+  return `<div class="diachips">${l.map(chip).join('')}</div>` + (mon ? '<div class="leyenda"><span><span class="diachip mon">● </span> en monitoreo</span><span><span class="diachip pend">⏳</span> en cola</span><span><span class="diachip hecho">✔</span> completado / con datos</span></div>' : '');
 }
+// Día que se está monitoreando ahora: existe, no está completado ni detenido y no es un día pasado.
+const enMonitoreo = m => m && m.tipo==='dia' && !m.pendiente && !m.error && !m.completado && !m.detenido && (m.fecha||m.desde) >= hoyLima();
 const enVig = (c, f) => !!c.perpetuo || ((!c.vigDesde || f >= c.vigDesde) && (!c.vigHasta || f <= c.vigHasta));
-function textoPeriodo(c){
-  if(c.perpetuo) return '<b>♾ perpetuo</b> (todos los días, sin fecha de fin)';
-  const n = c.vigDesde && c.vigHasta ? diasEntre(c.vigDesde, c.vigHasta).length : null;
-  return `📅 del <b>${c.vigDesde ? fAnio(c.vigDesde) : 'hoy'}</b> al <b>${c.vigHasta ? fAnio(c.vigHasta) : 'sin fin'}</b>${n?` (${n} día${n>1?'s':''})`:''}`;
-}
-let cronEdit = false;
 const cronActual = () => MODO==='monitor' ? MON : RAUTO;
 function pintarCron(){
-  const el = $('#cron'), C = cronActual(); if(!el || !C || cronEdit) return; // no pisar lo que el admin está editando
+  const el = $('#cron'), C = cronActual(); if(!el || !C) return;
   const mon = MODO==='monitor', adm = ROL==='admin', hoy = hoyLima();
   const fin = !C.perpetuo && C.vigHasta && hoy > C.vigHasta, noEmpieza = !C.perpetuo && C.vigDesde && hoy < C.vigDesde;
-  const etiqueta = !C.activa ? '<span class="tagt off">APAGADO</span>' : fin ? '<span class="tagt off">VIGENCIA TERMINADA</span>' : noEmpieza ? '<span class="tagt auto">PROGRAMADO</span>' : '<span class="tagt manual">ENCENDIDO</span>';
-  const que = mon ? `inicia solo el monitoreo de cada día a las <b>${C.hora}</b>` : `genera solo un reporte de hoy a las <b>${(C.horas||[]).join(', ')}</b>`;
-  let h = `<div class="croncab"><label class="toggle" title="${adm?'Encender / apagar este cron':'Solo el administrador puede cambiarlo'}"><input type="checkbox" id="cronOn" ${C.activa?'checked':''} ${adm?'':'disabled'}><i></i></label>
-    <div class="cronres"><div><b>⏱ Cron ${mon?'del monitoreo diario':'del reporte al instante'}</b> ${etiqueta}</div>
-      <div>${C.activa ? `Encendido: ${que}.` : `Apagado: ${mon?'el monitoreo se inicia a mano con “Iniciar monitoreo”':'los reportes se generan a mano'}. Al encenderlo, ${que}.`} Vigencia: ${textoPeriodo(C)}.</div></div>
-    ${adm?'<button class="btn-adm" id="cronEditar">✎ Programar horario y fechas</button>':''}</div>`;
-  if(!C.perpetuo && C.vigHasta && !fin) h += chipsDias(C.vigDesde && C.vigDesde > hoy ? C.vigDesde : (C.vigDesde || hoy), C.vigHasta);
+  const etiqueta = !C.activa ? '<span class="tagt off">APAGADO</span>' : fin ? '<span class="tagt off">TERMINADO</span>' : noEmpieza ? '<span class="tagt auto">PROGRAMADO</span>' : '<span class="tagt manual">ENCENDIDO</span>';
+  const hasta = C.perpetuo || !C.vigHasta ? 'sin fecha de fin' : `${fin?'terminó el':'hasta el'} ${fCorta(C.vigHasta)}`;
+  const resumen = `${mon ? `todos los días a las <b>${C.hora}</b>` : `a las <b>${(C.horas||[]).join(', ')}</b>`} · ${hasta}`;
+  let det = '';
+  if(!C.perpetuo && C.vigHasta && !fin) det += chipsDias(C.vigDesde && C.vigDesde > hoy ? C.vigDesde : hoy, C.vigHasta);
   if(mon){
-    h += `<div>${C.actualizarSalidas===false ? '⏸ Las actualizaciones antes de cada salida están apagadas.' : `⏱ Cada salida se actualiza <b>${(C.minutosAntes||[]).join(', ')} min</b> antes de partir (dentro de la vigencia). Cuando parte la última, el día queda <b>COMPLETADO</b>.`}</div>`;
-    h += `<div>📆 ${C.diasAdelante ? `Al iniciar cada día también monitorea por adelantado los <b>${C.diasAdelante}</b> día(s) siguientes${C.refrescoFuturoHoras ? `, releyéndolos completos cada <b>${C.refrescoFuturoHoras} a ${C.refrescoFuturoMaxHoras} h</b> hasta que llegue su día` : ''}.` : 'No monitorea días siguientes por adelantado.'}${C.refrescoHoyHoras ? ` Hoy se relee completo cada <b>${C.refrescoHoyHoras} a ${C.refrescoHoyMaxHoras} h</b>.` : ''}</div>`;
-    const ya = HIST.find(m=>m.fecha===hoy);
-    h += `<div class="pista">${!enVig(C, hoy) ? '⚠ Hoy está <b>fuera de la vigencia</b>: no se toman muestras automáticas; solo se puede actualizar a mano.'
-      : ya ? `ℹ Hoy ya se está monitoreando${ya.completado?' (COMPLETADO)':ya.detenido?' (DETENIDO)':''}: “Iniciar monitoreo” te dará la opción de verlo o forzar su actualización.`
-      : C.activa ? `ℹ Hoy se iniciará solo a las ${C.hora}. También puedes iniciarlo ya.` : 'ℹ Hoy todavía no se monitorea: inícialo con “Iniciar monitoreo”.'}</div>`;
+    const vc = ventanasEmp('cds', C), vp = ventanasEmp('pb', C), igual = vc.join() === vp.join();
+    det += `<div>${C.actualizarSalidas===false ? '⏸ Las lecturas antes de cada salida están apagadas.' : `⏱ Lecturas antes de cada salida: ${igual ? `<b>${txtMins(vc)}</b>` : `Cruz del Sur <b>${txtMins(vc)||'ninguna'}</b> · Peru Bus <b>${txtMins(vp)||'ninguna'}</b>`} (la venta online cierra ${(C.cierreMin||{}).cds ?? 30} min antes en CDS y ${(C.cierreMin||{}).pb ?? 30} min antes en PB).`}</div>`;
+    det += `<div>📆 ${C.diasAdelante ? `También monitorea por adelantado los <b>${C.diasAdelante}</b> día(s) siguientes${C.refrescoFuturoHoras ? `, releyéndolos completos cada ${C.refrescoFuturoHoras} a ${C.refrescoFuturoMaxHoras} h` : ''}.` : 'No monitorea días siguientes por adelantado.'}${C.refrescoHoyHoras ? ` Hoy se relee completo cada ${C.refrescoHoyHoras} a ${C.refrescoHoyMaxHoras} h.` : ''}</div>`;
   }
-  if(adm && C.ultimoResultado) h += `<div class="ayuda" style="margin:0">Última ejecución automática: ${esc(C.ultimoResultado)}</div>`;
-  el.innerHTML = h;
+  if(adm && C.ultimoResultado) det += `<div class="ayuda" style="margin:0">Última ejecución automática: ${esc(C.ultimoResultado)}</div>`;
+  // Solo se muestra afuera lo que requiere atención.
+  const alerta = mon && C.activa && !enVig(C, hoy) ? '<div class="pista">⚠ Hoy está fuera del periodo del monitoreo automático: no se toman lecturas solas.</div>' : '';
+  el.innerHTML = `<div class="croncab"><label class="toggle" title="${adm?'Encender / apagar':'Solo el administrador puede cambiarlo'}"><input type="checkbox" id="cronOn" ${C.activa?'checked':''} ${adm?'':'disabled'}><i></i></label>
+    <div class="cronres"><div><b>⏱ ${mon?'Monitoreo automático':'Reporte automático'}</b> ${etiqueta} <span class="cronmini">${resumen}</span></div></div>
+    <button class="linkbtn" id="cronMas">${CRON_ABIERTO?'▾ Ocultar detalles':'▸ Ver detalles'}</button>${adm?'<button class="btn-adm" id="cronEditar">⚙ Configurar</button>':''}</div>${alerta}
+    ${CRON_ABIERTO ? `<div class="crondet">${det}</div>` : ''}`;
   const on = $('#cronOn'); if(on && adm) on.onchange = () => guardarCron({ activa: on.checked });
-  const ed = $('#cronEditar'); if(ed) ed.onclick = abrirFormCron;
-}
-function abrirFormCron(){
-  const C = cronActual(), mon = MODO==='monitor', hoy = hoyLima(); cronEdit = true;
-  $('#cron').insertAdjacentHTML('beforeend', `<div class="cronform">
-    <div class="autogrid">${mon ? `<label class="campo">Hora del inicio automático<input type="time" id="cfHora" value="${C.hora||'03:00'}"></label>`
-      : `<label class="campo">Horas del reporte automático (separadas por coma)<input type="text" id="cfHoras" style="width:260px" value="${(C.horas||[]).join(', ')}" placeholder="08:00, 14:00, 20:00"></label>`}</div>
-    <div class="vigopc"><label><input type="radio" name="cfVig" value="perp" ${C.perpetuo?'checked':''}> ♾ Perpetuo</label><label><input type="radio" name="cfVig" value="fechas" ${C.perpetuo?'':'checked'}> 📅 Entre fechas</label></div>
-    <div id="cfFechas"><div class="autogrid"><label class="campo">Desde<input type="date" id="cfDesde" value="${C.vigDesde||hoy}"></label><label class="campo">Hasta<input type="date" id="cfHasta" value="${C.vigHasta||''}"></label></div>
-      <div class="presets"><span class="ayuda" style="margin:0">Rápido:</span><button data-cf="7">Próximos 7 días</button><button data-cf="30">Próximos 30 días</button><button data-cf="mes">Resto del mes</button></div></div>
-    <div class="vigprev" id="cfPrev"></div><div class="msg" id="cfMsg"></div>
-    <div class="acciones" style="justify-content:flex-start"><button class="btn-main" id="cfGuardar">Guardar programación</button><button class="btn-sec" id="cfCancelar">Cancelar</button></div></div>`);
-  const prev = () => {
-    const perp = $('input[name=cfVig]:checked').value === 'perp'; $('#cfFechas').classList.toggle('oculto', perp);
-    const d = $('#cfDesde').value, hh = $('#cfHasta').value;
-    $('#cfPrev').innerHTML = perp ? '♾ Se ejecutará <b>todos los días</b>, sin fecha de fin.'
-      : !d && !hh ? '<span class="err-t">Indica al menos una fecha, o elige “Perpetuo”.</span>'
-      : d && hh && hh < d ? '<span class="err-t">La fecha “hasta” es anterior a “desde”.</span>'
-      : `Días considerados: ${textoPeriodo({vigDesde:d, vigHasta:hh})}.${hh&&hh<hoy?' <span class="err-t">Esa vigencia ya terminó.</span>':''}` + (hh ? chipsDias(d || hoy, hh) : '');
-  };
-  $$('#cron input').forEach(i => { i.addEventListener('input', prev); i.addEventListener('change', prev); });
-  $$('[data-cf]').forEach(b => b.onclick = () => { const v = b.dataset.cf; $('#cfDesde').value = hoy;
-    if(v==='mes'){ const d=new Date(hoy+'T12:00:00Z'); $('#cfHasta').value = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth()+1, 0, 12)).toISOString().slice(0,10); }
-    else $('#cfHasta').value = sumarDias(hoy, Number(v)-1); prev(); });
-  $('#cfCancelar').onclick = () => { cronEdit = false; pintarCron(); };
-  $('#cfGuardar').onclick = () => { const perp = $('input[name=cfVig]:checked').value === 'perp';
-    guardarCron({ ...(mon ? { hora: $('#cfHora').value } : { horas: $('#cfHoras').value }), perpetuo: perp, vigDesde: perp ? null : $('#cfDesde').value, vigHasta: perp ? null : $('#cfHasta').value }); };
-  $('#cronEditar').disabled = true; prev();
+  const ed = $('#cronEditar'); if(ed) ed.onclick = () => abrirCfg('auto');
+  $('#cronMas').onclick = () => { CRON_ABIERTO = !CRON_ABIERTO; guardarPref('cronAbierto', CRON_ABIERTO?'1':'0'); pintarCron(); };
 }
 async function guardarCron(cambios){
   const mon = MODO==='monitor';
   const r = await post(mon ? '/api/admin/monitor' : '/api/admin/reporte-auto', cambios); const j = await r.json();
-  if(!r.ok){ if($('#cfMsg')) msg('#cfMsg', j.error, false); else alert(j.error); pintarCron(); return; }
+  if(!r.ok){ alert(j.error); pintarCron(); return; }
   if(mon) MON = j; else RAUTO = j;
-  cronEdit = false; pintarCron(); if(rep) pintar();
-  toast(`<h4>⏱ Cron ${mon?'del monitoreo diario':'del reporte al instante'} ${j.activa?'ENCENDIDO':'APAGADO'}</h4><div class="linea">Vigencia: ${textoPeriodo(j)}.</div>`, 'info');
+  pintarCron(); if(rep) pintar(); refrescarSistema();
+  toast(`<h4>⏱ ${mon?'Monitoreo automático':'Reporte automático'} ${j.activa?'ENCENDIDO':'APAGADO'}</h4><div class="linea">${j.perpetuo || !j.vigHasta ? 'Sin fecha de fin.' : `Hasta el ${fAnio(j.vigHasta)}.`}</div>`, 'info');
 }
 // Selección de servicios del próximo reporte al instante (por usuario; parte de la configuración global).
 let SEL_REP = null, SERV_TODOS = null;
@@ -592,13 +709,14 @@ async function cargarSelServ(){
 }
 // Monitoreo diario: qué servicios consulta (según la configuración; solo el admin la cambia).
 function pintarServMon(a){
-  const fila = (emp, nombre) => `<div class="fila"><b>${nombre}</b>${Object.entries(a.servicios[emp]).map(([n,v]) =>
-    `<span class="opc ${emp} ${v?'on':''}" style="${v?'':'text-decoration:line-through;color:#98a2b3'}" title="${v?'Se consulta':'No se consulta'}">${v?'✔ ':''}${esc(n)}</span>`).join('')}</div>`;
-  const hoy = HIST.find(m=>m.fecha===hoyLima());
-  $('#selServ').innerHTML = `<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><b>🎫 Servicios que consulta el monitoreo</b>
-      <span class="ayuda" style="margin:0">— se aplican al recorrido inicial de cada día${hoy?'; el día de hoy muestra arriba de sus tablas con qué servicios se está monitoreando':''}.</span>
-      ${ROL==='admin'?'<button class="btn-adm" id="btnServCambiar" style="margin-left:auto">⚙ Cambiar servicios</button>':'<span class="ayuda" style="margin:0 0 0 auto">🔒 Solo el administrador puede cambiarlos</span>'}</div>` + fila('cds','Cruz del Sur') + fila('pb','Peru Bus');
-  const b = $('#btnServCambiar'); if(b) b.onclick = () => $('#btnCfg').click();
+  const on = e => Object.entries(a.servicios[e]).filter(([,v])=>v).map(([n])=>n);
+  const det = `<h4>Servicios que consulta el monitoreo</h4>Se aplican al recorrido inicial de cada día.` + bloqueServicios({
+    cds: { incluidos: on('cds'), excluidos: Object.keys(a.servicios.cds).filter(n=>!a.servicios.cds[n]) },
+    pb: { incluidos: on('pb'), excluidos: Object.keys(a.servicios.pb).filter(n=>!a.servicios.pb[n]) } });
+  $('#selServ').className = 'servmini';
+  $('#selServ').innerHTML = `<span ${tipA(det)} class="conayuda">🎫 <b>Servicios:</b> <span class="pill cds">CDS</span> ${esc(on('cds').join(', ')||'ninguno')} · <span class="pill pb">PB</span> ${esc(on('pb').join(', ')||'ninguno')}</span>
+    ${ROL==='admin'?'<button class="linkbtn" id="btnServCambiar">cambiar</button>':''}`;
+  const b = $('#btnServCambiar'); if(b) b.onclick = () => abrirCfg('serv');
 }
 function pintarSelServ(){
   const fila = (emp, nombre) => `<div class="fila"><b>${nombre}</b>${SERV_TODOS[emp].map(n=>`<label class="opc ${emp} ${SEL_REP[emp].includes(n)?'on':''}"><input type="checkbox" data-selemp="${emp}" value="${esc(n)}" ${SEL_REP[emp].includes(n)?'checked':''}> ${esc(n)}</label>`).join('')}
@@ -613,12 +731,17 @@ function pintarSelServ(){
 cargarSelServ();
 $('#btnGenerar').onclick = async () => {
   if(SEL_REP && !(SEL_REP.cds.length + SEL_REP.pb.length)) return alert('Elige al menos un servicio.');
+  // Si ese día ya se monitorea en vivo, ofrecer verlo ahí (tiene lecturas automáticas y su evolución).
+  const f = fechaRep(), rd = await fetch('/api/dias/'+f);
+  if(rd.ok){ const d = await rd.json();
+    if(!d.completado && !d.detenido && await preguntar({ titulo: '📆 Ese día ya se está monitoreando', texto: `El <b>${fLarga(f)}</b> ya se monitorea en vivo, con lecturas automáticas y su curva de ventas. ¿Quieres verlo ahí? (Pulsa “Generar la foto igual” si necesitas un reporte aparte.)`, si: '👁 Ver el monitoreo', no: 'Generar la foto igual' }))
+      return location.href = '/?dia=' + f; }
   const r = await post('/api/consultar', { fecha: fechaRep(), ...(SEL_REP ? { servicios: SEL_REP } : {}) }); const j = await r.json();
   if(!r.ok) return alert(j.error);
   seguir(j.id);
 };
 const BTN_PRINCIPAL = () => MODO==='monitor' ? $('#btnIniciar') : $('#btnGenerar');
-const TXT_PRINCIPAL = () => MODO==='monitor' ? '▶ Iniciar monitoreo' : `📸 Generar reporte ${fechaRep()===hoyLima() ? 'de hoy' : 'del ' + fCorta(fechaRep())}`;
+const TXT_PRINCIPAL = () => MODO==='monitor' ? (hoyExiste() ? '👁 Ver hoy' : '▶ Iniciar monitoreo') : `📸 Generar reporte ${fechaRep()===hoyLima() ? 'de hoy' : 'del ' + fCorta(fechaRep())}`;
 function seguir(id){
   BTN_PRINCIPAL().disabled = true; BTN_PRINCIPAL().textContent = 'Consultando…';
   $('#progreso').classList.remove('oculto');
@@ -643,15 +766,24 @@ function seguir(id){
 let HIST = [], histFiltro = 'todos';
 const histExp = new Set(), detCache = {};
 try { if(localStorage.getItem('histCerrado_'+MODO)==='1') $('#cardHist').classList.add('cerrado'); } catch(_){}
+$('#btnHistorico').onclick = e => { e.stopPropagation(); location.href = '/api/excel-historico'; };
 $('#histCab').onclick = e => {
-  if(e.target.closest('#histFiltro')) return;
+  if(e.target.closest('#histFiltro') || e.target.closest('#btnHistorico')) return;
   const c = $('#cardHist').classList.toggle('cerrado');
   try { localStorage.setItem('histCerrado_'+MODO, c?'1':'0'); } catch(_){}
 };
 $$('#histFiltro button').forEach(b => b.onclick = () => {
   histFiltro = b.dataset.f; $$('#histFiltro button').forEach(x=>x.classList.toggle('on', x===b)); pintarHist();
 });
-function cargarHistorial(){ return fetch('/api/historial?tipo='+(MODO==='monitor'?'dia':'reporte')).then(r=>r.json()).then(l=>{ HIST = l; pintarHist(); pintarCron(); }); }
+function cargarHistorial(){ return fetch('/api/historial?tipo='+(MODO==='monitor'?'dia':'reporte')).then(r=>r.json()).then(l=>{ HIST = l; pintarHist(); pintarCron(); pintarBtnIniciar(); }); }
+// Etiqueta del día: morada si se está monitoreando (sólida hoy, clara por adelantado), punteada si está en cola.
+function tagDia(m){
+  const f = m.fecha||m.desde, hoy = hoyLima(), cuando = f===hoy ? 'hoy' : f>hoy ? enDias(f) : '';
+  if(m.pendiente) return `<span class="tagt pend" title="El recorrido inicial todavía no se hace">⏳ ${cuando||'en cola'}</span>`;
+  if(enMonitoreo(m)) return f===hoy ? '<span class="tagt mon" title="Se está monitoreando">● hoy · en monitoreo</span>'
+    : `<span class="tagt monf" title="Se monitorea por adelantado">● ${cuando} · en monitoreo</span>`;
+  return cuando ? `<span class="tagt ini">${cuando}</span>` : '';
+}
 function tagOrigen(m){
   if(m.origen==='auto') return `<span class="tagt auto" title="${m.tipo==='dia'?'Iniciado solo por el monitoreo diario':'Consulta automática'}">⏱ Automático</span>`;
   return m.rol==='admin' ? '<span class="tagt admin">👤 Admin</span>' : '<span class="tagt manual">👤 Usuario</span>';
@@ -680,11 +812,11 @@ function tagAct(a){
   return `<span class="tagt ${a.rol==='admin'?'admin':'manual'}" title="${esc(a.via||'')}">👤 Manual · ${alcanceAct(a)}${quien}</span>${via}`;
 }
 function resumenServ(sv){
-  if(!sv) return '<span class="ayuda">sin información</span>';
-  const parte = (k, n, x) => { if(!x) return '';
-    const tot = x.incluidos.length + x.excluidos.length;
-    return `<div><span class="pill ${k}">${n}</span> ${!x.excluidos.length ? '<span class="ayuda">todos</span>' : x.incluidos.map(s=>`<span class="chip ${k}">${esc(s)}</span>`).join('') + ` <span class="ayuda">(${x.incluidos.length}/${tot})</span>`}</div>`; };
-  return parte('cds','CDS',sv.cds) + parte('pb','PB',sv.pb);
+  if(!sv) return '<span class="ayuda">—</span>';
+  const norm = x => Array.isArray(x) ? {incluidos:x, excluidos:[]} : x;
+  const parte = (k, n, x) => { x = norm(x); if(!x) return ''; const tot = x.incluidos.length + x.excluidos.length;
+    return `<span class="pill ${k}">${n}</span> ${!x.excluidos.length ? 'todos' : `${x.incluidos.length}/${tot}`}`; };
+  return `<span class="svmini" ${tipA('<h4>Servicios consultados</h4>' + bloqueServicios(sv))}>${parte('cds','CDS',sv.cds)} ${parte('pb','PB',sv.pb)}</span>`;
 }
 function tablaActs(acts){
   if(!acts) return '<p class="ayuda">Cargando…</p>';
@@ -708,18 +840,25 @@ function pintarHist(){
   let h = `<tr>${cab.map(c=>`<th class="gen">${c}</th>`).join('')}</tr>`;
   if(!l.length) h += `<tr><td colspan="${cols}" class="vacio" style="padding:20px">${mon?'Todavía no hay días monitoreados.':'No hay reportes guardados.'}</td></tr>`;
   l.forEach(m=>{
+    if(m.pendiente){ // recorrido inicial en cola o en curso: todavía no hay datos
+      const est = m.pendiente==='curso' ? `<span class="spin"></span> haciendo el recorrido inicial…${m.progreso?` ${m.progreso}%`:''}`
+        : m.pendiente==='fondo' ? `⏳ recorrido inicial en cola: espera un buen momento (a más tardar ${hm(m.forzarDesde)})` : '⏳ recorrido inicial en cola';
+      h += `<tr class="fila enmon"><td></td><td style="text-align:left"><b>${fCorta(m.desde)}/${m.desde.slice(0,4)}</b> ${tagDia(m)}</td><td>${tagOrigen(m)}</td>
+        <td colspan="${cols-3}" style="text-align:left;color:#6941C6;font-weight:600">${est}</td></tr>`;
+      return;
+    }
     const abierto = rep && rep.archivo===m.archivo, exp = histExp.has(m.archivo);
     const viaje = !m.desde ? '' : m.desde===m.hasta ? fCorta(m.desde)+'/'+m.desde.slice(0,4) : `${fCorta(m.desde)} → ${fCorta(m.hasta)} ${m.hasta.slice(0,4)}`;
     const borrar = adm ? `<td><button class="btn-del" data-borrar-rep="${esc(m.archivo)}" title="Eliminar">🗑</button></td>` : '';
     const svc = `<td class="svc">${m.error ? `<span class="sindato">${esc(m.error)}</span>` : resumenServ(m.servicios)}</td>`;
     const vend = `<td class="cds"><span class="num">${m.vendidos?m.vendidos.cds:''}</span></td><td class="pb"><span class="num">${m.vendidos?m.vendidos.pb:''}</span></td>`;
-    h += `<tr class="fila ${abierto?'abierto':''} ${exp?'exp':''}" data-exp="${esc(m.archivo)}" title="Clic para ${exp?'ocultar':'ver'} ${mon?'las actualizaciones':'el detalle'}">
+    h += `<tr class="fila ${abierto?'abierto':''} ${exp?'exp':''} ${mon&&enMonitoreo(m)?'enmon':''}" data-exp="${esc(m.archivo)}" title="Clic para ${exp?'ocultar':'ver'} ${mon?'las actualizaciones':'el detalle'}">
       <td style="white-space:nowrap"><span class="flechita">${exp?'▾':'▸'}</span> <button class="btn-ver" data-ver="${esc(m.archivo)}" title="Abrir ${mon?'el día':'el reporte'}">📊 Ver</button></td>` +
-      (mon ? `<td style="text-align:left"><b>${viaje}</b>${m.desde===hoyLima()?' <span class="tagt manual">hoy</span>':m.desde>hoyLima()?` <span class="tagt auto" title="Se monitorea por adelantado">${enDias(m.desde)}</span>`:''}</td>
+      (mon ? `<td style="text-align:left"><b>${viaje}</b> ${tagDia(m)}${abierto?' <span class="tagt viendo">👁 viendo</span>':''}</td>
       <td>${tagOrigen(m)}</td><td>${fh(m.creado)}</td>
-      <td>${m.act ? `<span class="ok-t">✔ ${m.act.ok}</span>${m.act.error?` · <span class="err-t">✖ ${m.act.error}</span>`:''}` : ''}</td>
+      <td>${m.act ? `<span class="ok-t" title="Lecturas correctas">✔ ${m.act.ok}</span>${m.act.cerradas?` · <span class="cerr-t" title="Lecturas que encontraron la venta cerrada (no es un error)">🔒 ${m.act.cerradas}</span>`:''}${m.act.error?` · <span class="err-t" title="Lecturas que fallaron">✖ ${m.act.error}</span>`:''}` : ''}</td>
       <td>${m.ultima ? hm(m.ultima) : ''}</td>
-      <td class="prox">${m.completado ? '<span class="tagt fin">✔ COMPLETADO</span>' : m.detenido ? '<span class="tagt det">⏹ DETENIDO</span>' : m.desde>hoyLima() && m.proxRefresco ? txtRefresco(m.proxRefresco) : m.proxima ? `<b>${hm(m.proxima.t)}</b><small>${m.proxima.hora} ${EMP[m.proxima.emp]||''} · ${enMin(Date.parse(m.proxima.t))}</small>` : '<span class="ayuda">—</span>'}${!m.completado && !m.detenido && m.total ? `<small>quedan ${m.quedan} de ${m.total}</small>` : ''}</td>${svc}${vend}`
+      <td class="prox">${m.completado ? '<span class="tagt fin">✔ COMPLETADO</span>' : m.detenido ? '<span class="tagt det">⏹ DETENIDO</span>' : m.desde>hoyLima() && m.proxRefresco ? txtRefresco(m.proxRefresco) : m.proxima ? `<span class="conayuda" ${tipA(`Lectura de la salida de las ${m.proxima.hora} (${EMP[m.proxima.emp]||''}), ${m.proxima.m} min antes de salir.${m.total?`<br>Quedan ${m.quedan} de ${m.total} salidas por partir.`:''}`)}><b>${hm24(Date.parse(m.proxima.t))}</b> · ${enMin(Date.parse(m.proxima.t))}</span>` : '<span class="ayuda">—</span>'}</td>${svc}${vend}`
       : `<td>${tagOrigen(m)}</td><td>${fh(m.generado)}</td><td><b>${viaje}</b></td><td>${m.dias??''}</td>${svc}${vend}
       <td>${m.sinDato ? `<span class="sindato">${m.sinDato}</span>` : '<span class="ayuda">0</span>'}</td>`) + borrar + '</tr>';
     if(exp) h += `<tr class="det"><td></td><td colspan="${cols-1}">${mon ? tablaActs(detCache[m.archivo]) :
@@ -738,6 +877,8 @@ function abrir(archivo, bajar){
   return fetch(m ? '/api/dias/'+m[1] : '/api/historial/'+encodeURIComponent(archivo)).then(r=>r.json()).then(r=>{ if(r.error) return alert(r.error); mostrar(r); if(bajar) $('#reporte').scrollIntoView({behavior:'smooth'}); });
 }
 cargarHistorial();
+{ const pDia = new URLSearchParams(location.search).get('dia');
+  if(MODO==='monitor' && /^\d{4}-\d{2}-\d{2}$/.test(pDia||'')) { abrir(`dia_${pDia}.json`, true); history.replaceState(null, '', '/'); } }
 
 // ---------------- monitoreo en vivo: cola, bloqueo de filas y avisos ----------------
 let COLA = { enCola:{}, enCurso:{}, versiones:{} };
@@ -748,53 +889,82 @@ const estadoSal = id => {
   if((COLA.enCola[rep.fecha]||[]).includes(id) || pendLocal.has(id)) return 'cola';
   return null;
 };
-// Próxima actualización programada de una salida: {t, m} o null.
+// Próxima lectura programada de una salida: {t, m} o null.
 function proxSalida(s){
-  if(!MON || MON.actualizarSalidas === false || !rep) return null;
+  if(!MON || MON.actualizarSalidas === false || !rep || s.cerrada) return null;
   const ts = tSalida(rep.fecha, s.hora); let best = null;
-  if(s.cerrada) return null;
-  (MON.minutosAntes||[]).forEach(m => { const t = ts - m*60000; if(!(s.prog||{})[m] && t > Date.now() - 60000 && (!best || t < best.t)) best = {t, m}; });
+  ventanasEmp(s.emp).forEach(m => { const t = ts - m*60000; if(!(s.prog||{})[m] && t > Date.now() - 60000 && (!best || t < best.t)) best = {t, m}; });
   return best;
 }
+// Horas entre el último dato bueno de una salida y su cierre (o su partida). null si el dato es reciente.
+function datoViejo(s){
+  if(!s.actualizado) return null;
+  const fin = s.cerrada ? Date.parse(s.cerrada.t) : tSalida(rep.fecha, s.hora);
+  const h = (Math.min(fin, Date.now()) - Date.parse(s.actualizado)) / 36e5;
+  return h >= 1 ? h : null;
+}
+const hm24 = t => new Date(t - 5*36e5).toISOString().slice(11,16); // hora de Lima en 24 h, como la columna Hora
+const txtHoras = h => h >= 10 ? `${Math.round(h)} h` : `${Math.round(h*10)/10} h`.replace('.', ',');
 function celdaProx(salidas){
   const est = salidas.map(s=>estadoSal(s.id));
-  if(est.includes('curso')) return '<td class="estadofila"><span class="spin"></span> actualizando…</td>';
-  if(est.includes('cola')) return '<td class="estadofila">⏳ en cola</td>';
-  if(salidas.every(terminada)) return salidas.every(s=>s.cerrada)
-    ? `<td class="prox ya" title="${esc(salidas[0].cerrada.motivo||'')}"><span class="tagt cerr">🔒 Cerró la venta</span><small>detectado ${hm(salidas[0].cerrada.t)} · no se consulta más</small></td>`
-    : '<td class="prox ya">partió</td>';
-  if(rep.completado) return '<td class="prox ya">—</td>';
-  if(rep.detenido) return '<td class="prox ya">⏹ detenido</td>';
+  if(est.includes('curso')) return '<td class="estadofila" data-label="Próxima"><span class="spin"></span> leyendo…</td>';
+  if(est.includes('cola')) return '<td class="estadofila" data-label="Próxima">⏳ en cola</td>';
+  if(salidas.every(terminada)){
+    const s0 = salidas.find(s=>s.cerrada) || salidas[0], viejo = salidas.map(datoViejo).filter(Boolean).sort((a,b)=>b-a)[0];
+    const aviso = viejo ? ` <span class="viejo" ${tip(`<h4>⚠ Dato viejo</h4>La última lectura correcta fue a las <b>${hm(s0.actualizado)}</b>, ${txtHoras(viejo)} antes del ${s0.cerrada?'cierre de la venta':'la salida'}. Los vendidos finales pueden ser más.`)}>⚠</span>` : '';
+    return salidas.every(s=>s.cerrada)
+      ? `<td class="prox ya" data-label="Próxima"><span class="tagt cerr" ${tip(`<h4>🔒 Cerró la venta</h4>Detectado a las ${hm(s0.cerrada.t)}: la salida ya no aparece en la web. No se consulta más.`)}>🔒 cerró ${hm24(Date.parse(s0.cerrada.t))}</span>${aviso}</td>`
+      : `<td class="prox ya" data-label="Próxima">partió${aviso}</td>`;
+  }
+  if(rep.completado) return '<td class="prox ya" data-label="Próxima">—</td>';
+  if(rep.detenido) return '<td class="prox ya" data-label="Próxima">⏹</td>';
   const ps = salidas.map(proxSalida).filter(Boolean).sort((a,b)=>a.t-b.t);
-  if(!ps.length) return `<td class="prox ya" title="${MON&&MON.actualizarSalidas !== false?'Ya no quedan ventanas programadas para esta salida':'Actualizaciones programadas desactivadas en ⚙ Configuración → Monitoreo'}">—</td>`;
-  return `<td class="prox"><b>${hm(new Date(ps[0].t).toISOString())}</b><small>${ps[0].m} min antes · ${enMin(ps[0].t)}</small></td>`;
+  if(!ps.length) return `<td class="prox ya" data-label="Próxima" title="Ya no quedan lecturas programadas para esta salida">—</td>`;
+  return `<td class="prox" data-label="Próxima" ${tip(`Lectura ${ps[0].m} min antes de salir`)}><b>${hm24(ps[0].t)}</b><small>${enMin(ps[0].t)}</small></td>`;
 }
-// Ventanas configuradas (ej. 30, 20, 10 min antes): una columna chica por cada una.
-const VENTANAS = () => (esDia() && MON && MON.actualizarSalidas !== false) ? [...new Set(MON.minutosAntes||[])].sort((a,b)=>b-a) : [];
-const ICONO_V = { ok:['✔','v-ok','hecha'], error:['✖','v-err','falló'], omitida:['–','v-omi','omitida'], encolada:['⏳','v-cola','en cola'], pendiente:['○','v-pen','pendiente'],
-  cerrada:['🔒','v-cerr','esta lectura encontró la venta cerrada'], trasCierre:['🔒','v-cerr2','no se hizo: la venta ya había cerrado'] };
+// ---- Lecturas programadas antes de salir: una etiqueta por lectura, que dice claramente qué pasó ----
+const hayLecturas = () => esDia() && MON && MON.actualizarSalidas !== false;
+// Las de la configuración actual y, además, las que ya se hicieron con minutos anteriores (no se esconde lo que pasó).
+function ventanasSalida(s){
+  const hechas = Object.keys(s.prog||{}).map(Number).filter(m => ['ok','error','cerrada'].includes(s.prog[m]));
+  return [...new Set([...ventanasEmp(s.emp), ...hechas])].sort((a,b)=>b-a);
+}
 function estadoVentana(s, m){
   const e = (s.prog||{})[m]; if(e) return e;                 // lo que realmente pasó en esa lectura
   if(s.cerrada) return 'trasCierre';                          // no se llegó a hacer porque cerró antes
-  if(tSalida(rep.fecha, s.hora) <= Date.now() || rep.completado || rep.detenido) return 'omitida';
+  if(tSalida(rep.fecha, s.hora) - m*60000 <= Date.now() - 60000 || rep.completado || rep.detenido) return 'omitida';
   return 'pendiente';
 }
-const cabVentanas = () => VENTANAS().map(m=>`<th class="gen vcol" title="Lectura programada ${m} min antes de la salida">${m}'</th>`).join('');
-function celdasVentanas(salidas){
-  return VENTANAS().map(m => `<td class="vcol">${salidas.map(s => { const [ic, cls, txt] = ICONO_V[estadoVentana(s, m)];
-    const hora = hm(new Date(tSalida(rep.fecha, s.hora) - m*60000).toISOString());
-    const extra = s.cerrada && (cls==='v-cerr' || cls==='v-cerr2') ? ` (cierre detectado a las ${hm(s.cerrada.t)})` : '';
-    return `<span class="vicon ${cls}" title="${EMP[s.emp]||''} ${s.hora} ${esc(s.servicio||'')}: lectura ${m} min antes (${hora}) · ${txt}${extra}">${ic}</span>`; }).join('')}</td>`).join('');
+function chipVentana(s, m){
+  const e = estadoVentana(s, m), info = (s.progInfo||{})[m] || {}, hora = hm24(tSalida(rep.fecha, s.hora) - m*60000);
+  let cls, txt, det;
+  if(e==='ok'){ const d = info.antes!=null && info.v!=null ? info.v - info.antes : null;
+    cls='v-ok'; txt=`✔ ${m}'`; det=`<b>✔ Leída correctamente</b>${info.t?` a las ${hm(info.t)}`:''}${info.v!=null?`<br>Vendidos: ${info.antes??'?'} → <b>${info.v}</b>${d?` (${d>0?'+':''}${d})`:' (sin cambios)'}`:''}`; }
+  else if(e==='error'){ cls='v-err'; txt=`✖ ${m}'`; det=`<b>✖ Falló</b>${info.t?` a las ${hm(info.t)}`:''}${info.error?`: ${esc(info.error)}`:''}.<br>Se conservan los vendidos de la lectura anterior.`; }
+  else if(e==='cerrada'){ cls='v-cerr'; txt=`🔒 ${m}'`; det=`<b>🔒 Encontró la venta cerrada</b>${info.t?` (${hm(info.t)})`:''}: la salida ya no aparece en la web. Desde ahí no se consulta más.`; }
+  else if(e==='encolada'){ cls='v-cola'; txt=`⏳ ${m}'`; det='<b>⏳ En cola</b>: se está por leer.'; }
+  else if(e==='pendiente'){ const px = proxSalida(s); cls='v-pen'; txt = px && px.m===m ? `${m}' · ${hora}` : `${m}'`; det=`Pendiente: se leerá a las <b>${hora}</b> (${enMin(tSalida(rep.fecha, s.hora) - m*60000)}).`; }
+  else if(e==='trasCierre'){ cls='v-omi'; txt=`– ${m}'`; det=`<b>No se hizo</b>: la venta ya había cerrado${s.cerrada?` (detectado a las ${hm(s.cerrada.t)})`:''}.`; }
+  else { cls='v-omi'; txt=`– ${m}'`; det=`<b>No se hizo</b>: ${esc(info.motivo || (rep.completado||rep.detenido ? 'el día ya no se actualiza.' : 'ese momento ya había pasado cuando se configuró.'))}`; }
+  return `<span class="vchip ${cls}" ${tip(`<h4>${EMP[s.emp]||''} ${s.hora} ${esc(s.servicio||'')}</h4>Lectura ${m} min antes de salir (${hora})<br>${det}`)}>${txt}</span>`;
 }
+function celdaLecturas(salidas){
+  if(!hayLecturas()) return '';
+  const varias = salidas.length > 1;
+  return `<td class="lecturas" data-label="Lecturas">${salidas.map(s => { const l = ventanasSalida(s);
+    return `<div class="vfila">${varias?pillEmp(s.emp):''}${l.length ? l.map(m=>chipVentana(s,m)).join('') : '<span class="ayuda" style="margin:0">sin lecturas programadas</span>'}</div>`; }).join('')}</td>`;
+}
+const cabLecturas = (cls='gen') => hayLecturas() ? `<th class="${cls}">Lecturas antes de salir <span class="info" ${tip(`<h4>Lecturas antes de salir</h4>Una etiqueta por lectura programada:<br><span class="vchip v-ok">✔ 120'</span> se leyó bien<br><span class="vchip v-err">✖ 70'</span> falló<br><span class="vchip v-cerr">🔒 40'</span> encontró la venta cerrada<br><span class="vchip v-omi">– 180'</span> no se hizo<br><span class="vchip v-pen">40' · 10:20</span> pendiente<br><br>Pasa el cursor sobre cada una para ver la hora, los vendidos o el motivo.`)}>ⓘ</span></th>` : '';
+const leyendaLecturas = () => hayLecturas() ? `<div class="ayuda vley"><b>Lecturas antes de salir:</b> <span class="vchip v-ok">✔ 120'</span> se leyó bien · <span class="vchip v-err">✖ 70'</span> falló · <span class="vchip v-cerr">🔒 40'</span> encontró la venta cerrada · <span class="vchip v-omi">– 180'</span> no se hizo · <span class="vchip v-pen">40' · 10:20</span> pendiente. Pasa el cursor sobre cada una para ver la hora, los vendidos o el motivo.</div>` : '';
 function celdaUlt(salidas){
   const ult = salidas.map(s=>s.actualizado).filter(Boolean).sort().pop();
   const n = salidas.reduce((a,s)=>a+(s.nAct||0),0);
-  return `<td ${salidas.length===1?tip(tipHist(salidas[0])):''}>${ult?`<b>${hm(ult)}</b>`:''}${n?` <span class="ayuda">(${n})</span>`:''}</td>`;
+  return `<td data-label="Última" ${tip(salidas.length===1 ? tipHist(salidas[0]) : salidas.map(tipHist).join('<hr>'))}>${ult?`<b>${hm24(Date.parse(ult))}</b>`:''}</td>`;
 }
 function celdaBoton(salidas, datos){
-  if(rep.completado || rep.detenido || salidas.every(terminada)) return '<td><span class="ayuda" title="No se vuelve a consultar">—</span></td>';
+  if(rep.completado || rep.detenido || salidas.every(terminada)) return '<td class="boton"><span class="ayuda" title="No se vuelve a consultar">—</span></td>';
   const ocupado = salidas.some(s=>estadoSal(s.id));
-  return `<td><button class="btnact" ${datos} ${ocupado?'disabled':''} title="${ocupado?'Ya se está actualizando':'Actualizar ahora esta fila'}">${ocupado?'<span class="spin"></span>':'↻'}</button></td>`;
+  return `<td class="boton"><button class="btnact" ${datos} ${ocupado?'disabled':''} title="${ocupado?'Ya se está actualizando':'Actualizar ahora esta fila'}">${ocupado?'<span class="spin"></span>':'↻'}</button></td>`;
 }
 const claseFila = salidas => { const est = salidas.map(s=>estadoSal(s.id)); return est.includes('curso') ? 'bloq curso' : est.includes('cola') ? 'bloq' : ''; };
 
@@ -813,8 +983,9 @@ async function vigilar(forzar){
     if(forzar) pendLocal.clear(); // el servidor ya confirmó el pedido
 
     const firma = JSON.stringify([COLA.enCola, COLA.enCurso, COLA.versiones]);
-    const cambioVersiones = versionesPrev !== null && JSON.stringify(COLA.versiones) !== versionesPrev;
-    versionesPrev = JSON.stringify(COLA.versiones);
+    const vers = JSON.stringify([COLA.versiones, COLA.iniciando]);
+    const cambioVersiones = versionesPrev !== null && vers !== versionesPrev;
+    versionesPrev = vers;
     if(rep && rep.tipo==='dia' && COLA.versiones[rep.fecha] != null && COLA.versiones[rep.fecha] !== rep.version){
       const r = await (await fetch('/api/dias/'+rep.fecha)).json();
       if(!r.error){ avisarNuevas(r); rep = r; }
@@ -950,13 +1121,16 @@ function abrirPanel(n){
 }
 $$('.cfgtabs button').forEach(b=>b.onclick=()=>abrirPanel(b.dataset.cfg));
 $$('[data-cerrar]').forEach(b=>b.onclick=()=>$('#modalCfg').classList.add('oculto'));
-$('#btnCfg').onclick = () => { $('#modalCfg').classList.remove('oculto'); $$('.soloadmin').forEach(b=>b.classList.toggle('oculto', ROL!=='admin')); abrirPanel('serv'); };
+const abrirCfg = (n = 'serv') => { $('#modalCfg').classList.remove('oculto'); $$('.soloadmin').forEach(b=>b.classList.toggle('oculto', ROL!=='admin')); abrirPanel(n); };
+$('#btnCfg').onclick = () => abrirCfg('serv');
 
 async function cargarServicios(){
   const a = await (await fetch('/api/ajustes')).json();
+  const cap = a.capacidadPb || {};
   const pinta = (emp, cont) => { const e = Object.entries(a.servicios[emp]);
     $(cont).innerHTML = `<label class="todos"><input type="checkbox" data-todos="${emp}"> Marcar / desmarcar todos</label>` +
-      e.map(([n,v])=>`<label><input type="checkbox" data-emp="${emp}" value="${n.replace(/"/g,'&quot;')}" ${v?'checked':''}> ${n}</label>`).join(''); };
+      e.map(([n,v])=>`<div class="servfila"><label><input type="checkbox" data-emp="${emp}" value="${esc(n)}" ${v?'checked':''}> ${esc(n)}</label>${emp==='pb' ? `<span class="capbus" title="Asientos del bus de este servicio. Vendidos = capacidad − asientos restantes.">cap. <input type="number" min="10" max="80" data-cap="${esc(n)}" value="${cap[n] ?? ''}" placeholder="46"></span>` : ''}</div>`).join('') +
+      (emp==='pb' ? '<div class="ayuda">“cap.” = asientos del bus de cada servicio (vacío = 46). Peru Bus solo muestra los asientos restantes, así que los vendidos dependen de este número.</div>' : ''); };
   pinta('cds','#servCds'); pinta('pb','#servPb');
   const adm = ROL==='admin';
   $('#servSoloLectura').classList.toggle('oculto', adm);
@@ -967,7 +1141,8 @@ async function cargarServicios(){
 }
 $('#btnGuardarServ').onclick = async () => {
   const servicios = {cds:{},pb:{}}; $$('[data-emp]').forEach(c=>servicios[c.dataset.emp][c.value]=c.checked);
-  const r = await post('/api/ajustes',{servicios}); const j = await r.json();
+  const capacidadPb = {}; $$('[data-cap]').forEach(i=>{ capacidadPb[i.dataset.cap] = i.value; });
+  const r = await post('/api/ajustes',{servicios, capacidadPb}); const j = await r.json();
   if(!r.ok) return msg('#msgServ', j.error, false);
   msg('#msgServ', '✔ Guardado. Se aplica desde el próximo recorrido y en los reportes nuevos.', true);
   cargarSelServ();
@@ -1020,47 +1195,77 @@ $('#btnAgregarClave').onclick = async () => {
   if(r.ok){ pintarClaves(j.claves); $('#nuevaClave').value=''; msg('#msgClaves','✔ Agregada.',true); } else msg('#msgClaves',j.error,false);
 };
 $('#btnGenClave').onclick = () => { const a='abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789'; const v=new Uint32Array(10); crypto.getRandomValues(v); $('#nuevaClave').value=[...v].map(x=>a[x%a.length]).join(''); };
-function pintarAuto(){
-  const a = MON || {actualizarSalidas:true,minutosAntes:[180,120,60,20],reintentos:3,esperaReintentoSeg:60,diasAdelante:3,refrescoFuturoHoras:3,refrescoFuturoMaxHoras:5,refrescoHoyHoras:4,refrescoHoyMaxHoras:5};
-  $('#autoActSal').checked = a.actualizarSalidas !== false; $('#autoMins').value = (a.minutosAntes||[]).join(',');
-  $('#autoReint').value = a.reintentos; $('#autoEspera').value = a.esperaReintentoSeg;
+// Minutos antes de cada salida en que se lee, por empresa (igual que el servidor: nada después del cierre de la venta).
+function ventanasEmp(emp, M = MON){
+  if(!M || M.actualizarSalidas === false) return [];
+  const base = emp==='pb' && Array.isArray(M.minutosAntesPb) && M.minutosAntesPb.length ? M.minutosAntesPb : (M.minutosAntes||[]);
+  const cierre = Number((M.cierreMin||{})[emp]) || 0;
+  return [...new Set(base)].filter(m=>m>cierre).sort((a,b)=>b-a);
+}
+const txtMins = l => (l||[]).map(m => m>=60 && m%60===0 ? `${m/60} h` : m>60 ? `${Math.floor(m/60)} h ${m%60} min` : `${m} min`).join(', ');
+const listaMins = txt => { const l = String(txt||'').split(/[,;\s]+/).filter(Boolean).map(Number); return l.length && l.every(m=>Number.isInteger(m) && m>=1 && m<=600) ? [...new Set(l)].sort((a,b)=>b-a) : null; };
+async function pintarAuto(){
+  const a = MON || {}, R = RAUTO || {};
+  $('#autoMonOn').checked = !!a.activa; $('#autoHora').value = a.hora || '03:00';
+  const finM = !a.perpetuo && a.vigHasta; $$('[name=autoMonFin]').forEach(r=>r.checked = (r.value==='si') === !!finM); $('#autoMonHasta').value = a.vigHasta || '';
+  $('#autoActSal').checked = a.actualizarSalidas !== false; $('#autoMins').value = (a.minutosAntes||[180,120,70,40]).join(',');
+  const pbIgual = !(Array.isArray(a.minutosAntesPb) && a.minutosAntesPb.length);
+  $('#autoPbIgual').checked = pbIgual; $('#autoMinsPb').value = pbIgual ? '' : a.minutosAntesPb.join(',');
+  $('#autoCierreCds').value = (a.cierreMin||{}).cds ?? 30; $('#autoCierrePb').value = (a.cierreMin||{}).pb ?? 30;
+  $('#autoReint').value = a.reintentos ?? 3; $('#autoEspera').value = a.esperaReintentoSeg ?? 60;
   $('#autoAdel').value = a.diasAdelante ?? 3; $('#autoRefFut').value = a.refrescoFuturoHoras ?? 3; $('#autoRefFutMax').value = a.refrescoFuturoMaxHoras ?? 5;
   $('#autoRefHoy').value = a.refrescoHoyHoras ?? 4; $('#autoRefHoyMax').value = a.refrescoHoyMaxHoras ?? 5;
+  $('#autoRepOn').checked = !!R.activa; $('#autoRepHoras').value = (R.horas||[]).join(', ');
+  const finR = !R.perpetuo && R.vigHasta; $$('[name=autoRepFin]').forEach(r=>r.checked = (r.value==='si') === !!finR); $('#autoRepHasta').value = R.vigHasta || '';
   $('#autoRepFut').value = maxDiasRep();
-  $('#autoEstado').className = 'estado-token';
-  $('#autoEstado').innerHTML = `Cron del monitoreo diario: <b>${a.activa?'encendido':'apagado'}</b> · vigencia ${textoPeriodo(a)}. Se cambia en la pantalla Monitoreo diario.`;
+  try { const aj = await (await fetch('/api/ajustes')).json(); $('#autoLimpieza').value = aj.limpiezaDias ?? 90; } catch(_){}
   prevAuto(); msg('#msgAuto','');
 }
 function prevAuto(){
   $('#secSal').classList.toggle('apagado', !$('#autoActSal').checked);
-  const mins = $('#autoMins').value.split(/[,;\s]+/).filter(Boolean).map(Number);
-  if(!mins.length || !mins.every(m=>Number.isInteger(m) && m>=1 && m<=600)){ $('#minsPrev').innerHTML = '<span class="err-t">Escribe minutos enteros entre 1 y 600, separados por coma (por ejemplo 30,20,10).</span>'; return; }
-  const ms = [...new Set(mins)].sort((a,b)=>b-a), base = 15*60, hh = x => `${String(Math.floor(x/60)).padStart(2,'0')}:${String(x%60).padStart(2,'0')}`;
+  $('#autoPbPropio').classList.toggle('oculto', $('#autoPbIgual').checked);
+  $('#autoMonHasta').disabled = !$('[name=autoMonFin][value=si]').checked; $('#autoRepHasta').disabled = !$('[name=autoRepFin][value=si]').checked;
+  const cds = listaMins($('#autoMins').value), pb = $('#autoPbIgual').checked ? cds : listaMins($('#autoMinsPb').value);
+  const cierre = { cds: Number($('#autoCierreCds').value)||0, pb: Number($('#autoCierrePb').value)||0 };
+  if(!cds || !pb){ $('#minsPrev').innerHTML = '<span class="err-t">Escribe minutos enteros entre 1 y 600, separados por coma (por ejemplo 180,120,70,40).</span>'; }
+  else {
+    const hh = x => `${String(Math.floor(x/60)).padStart(2,'0')}:${String(x%60).padStart(2,'0')}`, base = 15*60;
+    const linea = (emp, nombre, l) => { const va = l.filter(m=>m>cierre[emp]), fuera = l.filter(m=>m<=cierre[emp]);
+      return `<div><b>${nombre}</b>: una salida de las 15:00 se lee a las ${va.length ? va.map(m=>`<b>${hh(base-m)}</b>`).join(', ') : '<span class="err-t">ninguna hora</span>'}${fuera.length ? ` · <span class="err-t">${fuera.join(', ')} min se ignoran: caen después del cierre de la venta (${cierre[emp]} min antes).</span>` : ''}</div>`; };
+    $('#minsPrev').innerHTML = linea('cds','Cruz del Sur',cds) + linea('pb','Peru Bus',pb) + `<div class="ayuda" style="margin:4px 0 0">Si una lectura falla se reintenta hasta ${$('#autoReint').value||3} veces cada ${$('#autoEspera').value||60} s, siempre antes del cierre.</div>`;
+  }
   const v = id => Number($(id).value)||0, nA = v('#autoAdel'), rf = v('#autoRefFut'), rfM = v('#autoRefFutMax'), rh = v('#autoRefHoy'), rhM = v('#autoRefHoyMax');
   const hoy = hoyLima(), dias = Array.from({length:nA}, (_,i)=>fCorta(sumarDias(hoy,i+1)));
   $('#adelPrev').innerHTML = (rf && rfM < rf) || (rh && rhM < rh) ? '<span class="err-t">El segundo número de horas (máximo) no puede ser menor que el primero (mínimo).</span>'
     : (nA ? `Ejemplo, si hoy es ${fCorta(hoy)}: también se monitorean <b>${dias.join(', ')}</b>${rf ? `, y cada uno se relee completo cada <b>${rf} a ${rfM} h</b> hasta que llegue su día` : ', sin releerlos hasta que llegue su día'}.` : 'Solo se monitorea el día de hoy.')
     + ` Hoy se relee completo ${rh ? `cada <b>${rh} a ${rhM} h</b>` : '<b>nunca</b>'}, además de las lecturas antes de cada salida.`;
-  $('#minsPrev').innerHTML = `Ejemplo: una salida de las <b>15:00</b> se lee a las ${ms.map(m=>`<b>${hh(base-m)}</b>`).join(', ')} (${ms.length} lectura${ms.length>1?'s':''}, además del recorrido inicial). Si una lectura falla, se reintenta hasta <b>${$('#autoReint').value||3}</b> veces cada <b>${$('#autoEspera').value||60} s</b>, siempre antes de que parta.`;
 }
-['#autoActSal','#autoMins','#autoReint','#autoEspera','#autoAdel','#autoRefFut','#autoRefFutMax','#autoRefHoy','#autoRefHoyMax'].forEach(id=>{ $(id).addEventListener('input', prevAuto); $(id).addEventListener('change', prevAuto); });
+$$('[data-panel="auto"] input').forEach(i=>{ i.addEventListener('input', prevAuto); i.addEventListener('change', prevAuto); });
 $$('[data-mins]').forEach(b=>b.onclick=()=>{ $('#autoMins').value = b.dataset.mins; prevAuto(); });
 $('#btnGuardarAuto').onclick = async () => {
-  const r = await post('/api/admin/monitor',{actualizarSalidas:$('#autoActSal').checked,minutosAntes:$('#autoMins').value,reintentos:Number($('#autoReint').value),esperaReintentoSeg:Number($('#autoEspera').value),
+  const finM = $('[name=autoMonFin][value=si]').checked, finR = $('[name=autoRepFin][value=si]').checked;
+  if(finM && !$('#autoMonHasta').value) return msg('#msgAuto','Indica hasta qué día corre el monitoreo automático, o elige “sin fecha de fin”.',false);
+  if(finR && !$('#autoRepHasta').value) return msg('#msgAuto','Indica hasta qué día corre el reporte automático, o elige “sin fecha de fin”.',false);
+  const r = await post('/api/admin/monitor',{activa:$('#autoMonOn').checked, hora:$('#autoHora').value, perpetuo:!finM, vigDesde:null, vigHasta: finM ? $('#autoMonHasta').value : null,
+    actualizarSalidas:$('#autoActSal').checked, minutosAntes:$('#autoMins').value, minutosAntesPb: $('#autoPbIgual').checked ? '' : $('#autoMinsPb').value,
+    cierreMin:{cds:Number($('#autoCierreCds').value), pb:Number($('#autoCierrePb').value)}, reintentos:Number($('#autoReint').value), esperaReintentoSeg:Number($('#autoEspera').value),
     diasAdelante:Number($('#autoAdel').value),refrescoFuturoHoras:Number($('#autoRefFut').value),refrescoFuturoMaxHoras:Number($('#autoRefFutMax').value),refrescoHoyHoras:Number($('#autoRefHoy').value),refrescoHoyMaxHoras:Number($('#autoRefHoyMax').value)});
   const j = await r.json(); if(!r.ok) return msg('#msgAuto',j.error,false);
-  MON=j;
-  const r2 = await post('/api/admin/reporte-auto',{diasFuturo:Number($('#autoRepFut').value)}); const j2 = await r2.json();
-  if(!r2.ok) return msg('#msgAuto',j2.error,false);
-  RAUTO=j2; pintarHoy(); pintarAuto(); pintarCron(); if(rep) pintar(); msg('#msgAuto','✔ Guardado.',true);
+  MON = j;
+  const r2 = await post('/api/admin/reporte-auto',{activa:$('#autoRepOn').checked, horas:$('#autoRepHoras').value || '08:00', perpetuo:!finR, vigDesde:null, vigHasta: finR ? $('#autoRepHasta').value : null, diasFuturo:Number($('#autoRepFut').value)});
+  const j2 = await r2.json(); if(!r2.ok) return msg('#msgAuto',j2.error,false);
+  RAUTO = j2;
+  const r3 = await post('/api/ajustes',{limpiezaDias:Number($('#autoLimpieza').value)}); const j3 = await r3.json(); if(!r3.ok) return msg('#msgAuto',j3.error,false);
+  pintarHoy(); pintarCron(); if(rep) pintar(); refrescarSistema(); msg('#msgAuto','✔ Guardado.',true);
 };
 
 // ---------------- tooltip ----------------
 const TIPS = []; const tip = (html) => { TIPS.push(html); return `data-tip="${TIPS.length-1}"`; };
+const tipA = (html) => `data-tiph="${esc(html)}"`; // tooltip con el contenido en el propio atributo
 document.addEventListener('mousemove', e => {
-  const el = e.target.closest && e.target.closest('[data-tip]'); const t = $('#tip');
+  const el = e.target.closest && e.target.closest('[data-tip],[data-tiph]'); const t = $('#tip');
   if(!el){ t.style.display='none'; return; }
-  t.innerHTML = TIPS[el.dataset.tip]; t.style.display='block';
+  t.innerHTML = el.dataset.tiph ?? TIPS[el.dataset.tip]; t.style.display='block';
   const w=t.offsetWidth, h=t.offsetHeight;
   t.style.left = Math.min(e.clientX+14, innerWidth-w-8)+'px';
   t.style.top = (e.clientY+h+20 > innerHeight ? e.clientY-h-12 : e.clientY+14)+'px';
@@ -1166,34 +1371,106 @@ function detalle(salidas, cls){
   salidas.forEach(s => { s.emp = s.emp || cls; });
   if(!salidas.length) return '<p class="vacio">Sin salidas</p>';
   const d = esDia();
-  return `<div class="tabla-wrap"><table><tr>${['Hora','Llega','Servicio','Origen','Destino','Precio','Capacidad','Libres','Vendidos','Ocup.','Nota'].concat(d?['Última act.']:[]).map(h=>`<th class="${cls}">${h}</th>`).join('')}${d?cabVentanas():''}${d?['Próxima act.',''].map(h=>`<th class="${cls}">${h}</th>`).join(''):''}</tr>` +
-    salidas.map(s=>`<tr class="${s.duplicadoDe||s.vendidos==null?'dup':''} ${d?claseFila([s]):''}"><td><span class="hora">${s.hora}</span></td><td>${s.llegada||''}</td><td>${s.servicio||''}</td><td>${s.origen||''}</td><td>${s.destino||''}</td><td>${s.precio!=null?'S/ '+s.precio:''}</td><td>${s.capacidad??''}</td><td>${s.libres??''}</td><td ${s.porTarifa?tip(tipSalida(s)):''}>${s.vendidos==null?'<span class="sindato">sin dato</span>':`<span class="num">${s.vendidos}</span>`}</td><td>${s.capacidad&&s.vendidos!=null?pct(s.vendidos/s.capacidad):''}</td><td style="text-align:left;white-space:normal;min-width:220px;font-size:13px">${s.nota||''}</td>${d?celdaUlt([s])+celdasVentanas([s])+celdaProx([s])+celdaBoton([s],`data-act-id="${esc(s.id)}"`):''}</tr>`).join('') + '</table></div>';
+  return `<div class="tabla-wrap"><table><tr>${['Hora','Llega','Servicio','Origen','Destino','Precio','Capacidad','Libres','Vendidos','Ocup.','Nota'].concat(d?['Última act.']:[]).map(h=>`<th class="${cls}">${h}</th>`).join('')}${d?cabLecturas(cls):''}${d?['Próxima act.',''].map(h=>`<th class="${cls}">${h}</th>`).join(''):''}</tr>` +
+    salidas.map(s=>`<tr class="${s.duplicadoDe||s.vendidos==null?'dup':''} ${d?claseFila([s]):''}"><td><span class="hora">${s.hora}</span></td><td>${s.llegada||''}</td><td>${s.servicio||''}</td><td>${s.origen||''}</td><td>${s.destino||''}</td><td>${s.precio!=null?'S/ '+s.precio:''}</td><td>${s.capacidad??''}</td><td>${s.libres??''}</td><td ${s.porTarifa?tip(tipSalida(s)):''}>${s.vendidos==null?'<span class="sindato">sin dato</span>':`<span class="num">${s.vendidos}</span>`}</td><td>${s.capacidad&&s.vendidos!=null?pct(s.vendidos/s.capacidad):''}</td><td style="text-align:left;white-space:normal;min-width:220px;font-size:13px">${s.nota||''}</td>${d?celdaUlt([s])+celdaLecturas([s])+celdaProx([s])+celdaBoton([s],`data-act-id="${esc(s.id)}"`):''}</tr>`).join('') + '</table></div>';
 }
 
 // ---------------- vista de un día ----------------
+// Comparación por franja horaria (las dos empresas casi nunca salen a la misma hora exacta).
+const HORAS_FRANJA = 2;
+function franjas(cds, pb){
+  const m = new Map();
+  const add = (s,k) => { if(!cuenta(s)) return; const h = Math.floor(Number(s.hora.slice(0,2)) / HORAS_FRANJA) * HORAS_FRANJA;
+    const f = m.get(h) || {h, cds:{n:0,v:0,c:0,l:[]}, pb:{n:0,v:0,c:0,l:[]}}; f[k].n++; f[k].v += s.vendidos; f[k].c += s.capacidad||0; f[k].l.push(s); m.set(h, f); };
+  cds.forEach(s=>add(s,'cds')); pb.forEach(s=>add(s,'pb'));
+  const dd = n => String(n).padStart(2,'0');
+  return [...m.values()].sort((a,b)=>a.h-b.h).map(f=>({...f, etiqueta:`${dd(f.h)}:00–${dd(f.h+HORAS_FRANJA)}:00`}));
+}
+function kpiFranjas(fr, rc, rp){
+  const dif = rp.vendidos - rc.vendidos, gc = fr.filter(f=>f.cds.v>f.pb.v).length, gp = fr.filter(f=>f.pb.v>f.cds.v).length;
+  return `<div class="kpi cmp"><h3>Comparación del día</h3><div class="fila">
+    <div><div class="v ${dif>0?'pos':dif<0?'neg':''}">${dif>0?'+':''}${dif}</div><div class="l">vendidos PB − CDS</div></div>
+    <div><div class="v neg">${gc}</div><div class="l">franjas de ${HORAS_FRANJA} h que gana CDS</div></div>
+    <div><div class="v pos">${gp}</div><div class="l">franjas de ${HORAS_FRANJA} h que gana PB</div></div></div></div>`;
+}
+function tablaFranjas(fr){
+  if(!fr.length) return '';
+  const o = x => x.c ? pct(x.v/x.c) : '';
+  return `<div class="card"><h3 class="sec">Comparación por franja de ${HORAS_FRANJA} horas</h3><div class="tabla-wrap tabla-resp"><table>
+    <tr class="cab"><th class="gen">Franja</th><th class="cds">CDS salidas</th><th class="cds">CDS vendidos</th><th class="cds">CDS ocup.</th><th class="pb">PB salidas</th><th class="pb">PB vendidos</th><th class="pb">PB ocup.</th><th class="gen">Diferencia (PB − CDS)</th><th class="gen">Vende más</th></tr>` +
+    fr.map(f=>{ const d = f.pb.v - f.cds.v;
+      return `<tr><td data-label="Franja"><b>${f.etiqueta}</b></td><td class="cds" data-label="CDS salidas">${f.cds.n||''}</td><td class="cds" data-label="CDS vendidos" ${f.cds.n?tip(tipVendidos('Cruz del Sur',f.cds.l,f.etiqueta)):''}>${f.cds.n?`<span class="num">${f.cds.v}</span>`:''}</td><td class="cds" data-label="CDS ocup.">${o(f.cds)}</td>
+        <td class="pb" data-label="PB salidas">${f.pb.n||''}</td><td class="pb" data-label="PB vendidos" ${f.pb.n?tip(tipVendidos('Peru Bus',f.pb.l,f.etiqueta)):''}>${f.pb.n?`<span class="num">${f.pb.v}</span>`:''}</td><td class="pb" data-label="PB ocup.">${o(f.pb)}</td>
+        <td data-label="Diferencia"><span class="${d>0?'pos':d<0?'neg':''}" style="font-size:17px">${d>0?'+':''}${d}</span></td><td data-label="Vende más">${d>0?'<span class="pill pb">Peru Bus</span>':d<0?'<span class="pill cds">Cruz del Sur</span>':'empate'}</td></tr>`; }).join('') +
+    `</table></div></div>`;
+}
+// ---- Curva de ventas: vendidos de cada salida según cuántas horas faltaban para salir ----
+const COLOR_CURVA = { cds:'#1F5BB5', pb:'#C0392B' }; // validados (separación también para daltonismo)
+let CURVA_SEL = null;
+function curvaVentas(r){
+  const series = ['cds','pb'].flatMap(emp => r[emp].salidas.filter(s=>!s.duplicadoDe).map(s => ({ s, emp,
+    pts: (s.historial||[]).filter(h=>h.v!=null).map(h=>({ x:(tSalida(rep.fecha, s.hora) - Date.parse(h.t))/36e5, y:h.v, t:h.t })).filter(p=>p.x >= 0).sort((a,b)=>b.x-a.x) })))
+    .filter(x => x.pts.length);
+  if(!series.length) return '';
+  const W = 960, H = 330, L = 46, R = 70, T = 14, B = 42;
+  const maxX = Math.max(1, Math.ceil(Math.max(...series.flatMap(x=>x.pts.map(p=>p.x)))));
+  const maxY = Math.max(10, ...series.flatMap(x=>x.pts.map(p=>p.y))), topY = Math.ceil(maxY/10)*10;
+  const X = h => L + (W-L-R) * (1 - h/maxX), Y = v => H-B - (H-B-T) * v / topY;
+  const pasoX = maxX <= 6 ? 1 : maxX <= 24 ? 3 : maxX <= 48 ? 6 : 12;
+  let g = '';
+  for(let i=0;i<=4;i++){ const v = Math.round(topY*i/4); g += `<line x1="${L}" x2="${W-R}" y1="${Y(v)}" y2="${Y(v)}" stroke="#EAECF0"/><text x="${L-8}" y="${Y(v)+4}" text-anchor="end" fill="#667085">${v}</text>`; }
+  for(let h=0; h<=maxX; h+=pasoX) g += `<text x="${X(h)}" y="${H-B+18}" text-anchor="middle" fill="#667085">${h===0?'sale':`${h} h`}</text>`;
+  g += `<line x1="${L}" x2="${W-R}" y1="${H-B}" y2="${H-B}" stroke="#98A2B3"/><text x="${(L+W-R)/2}" y="${H-6}" text-anchor="middle" fill="#475467" font-weight="600">horas antes de salir →</text>`;
+  const id = x => `${x.emp}|${x.s.id}`, sel = series.find(x=>id(x)===CURVA_SEL);
+  const camino = x => x.pts.map((p,i)=>`${i?'L':'M'}${X(p.x).toFixed(1)},${Y(p.y).toFixed(1)}`).join('');
+  series.filter(x=>x!==sel).forEach(x => {
+    g += `<g class="serie" ${tip(`<h4>${EMP[x.emp]} · ${x.s.hora} ${esc(x.s.servicio||'')}</h4>${esc(x.s.origen||'')}` + tipHist(x.s).replace(/^<h4>.*?<\/h4>/,''))} data-curva="${esc(id(x))}">
+      <path d="${camino(x)}" fill="none" stroke="transparent" stroke-width="12"/><path class="l" d="${camino(x)}" fill="none" stroke="${COLOR_CURVA[x.emp]}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/></g>`;
+  });
+  if(sel){
+    const ult = sel.pts[sel.pts.length-1];
+    g += `<g class="serie sel" ${tip(tipHist(sel.s))}><path d="${camino(sel)}" fill="none" stroke="#fff" stroke-width="6"/><path d="${camino(sel)}" fill="none" stroke="${COLOR_CURVA[sel.emp]}" stroke-width="3" stroke-linejoin="round"/>` +
+      sel.pts.map(p=>`<circle cx="${X(p.x)}" cy="${Y(p.y)}" r="4.5" fill="${COLOR_CURVA[sel.emp]}" stroke="#fff" stroke-width="2"/>`).join('') +
+      `<text x="${X(ult.x)+8}" y="${Y(ult.y)+4}" fill="#1d2330" font-weight="700">${ult.y}</text></g>`;
+  }
+  const opciones = series.map(x=>`<option value="${esc(id(x))}" ${id(x)===CURVA_SEL?'selected':''}>${x.emp==='cds'?'CDS':'PB'} ${x.s.hora} ${esc(x.s.servicio||'')} · ${esc(x.s.origen||'')}</option>`).join('');
+  const n = e => series.filter(x=>x.emp===e).length;
+  return `<div class="card"><div class="seccab"><h3 class="sec">Curva de ventas <span class="info" ${tip('Cada línea es una salida: cuántos vendidos tenía en cada lectura, según las horas que faltaban para salir. Pasa el cursor sobre una línea para ver sus lecturas; elige una para resaltarla. Todas las lecturas están en la hoja “Evolución” del Excel.')}>ⓘ</span></h3>
+      <span class="leyenda" style="margin:0"><span><b style="background:${COLOR_CURVA.cds}"></b>Cruz del Sur (${n('cds')})</span><span><b style="background:${COLOR_CURVA.pb}"></b>Peru Bus (${n('pb')})</span></span>
+      <label class="curvasel">Resaltar <select id="curvaSel"><option value="">— ninguna —</option>${opciones}</select></label></div>
+
+    <div class="grafico curva"><svg viewBox="0 0 ${W} ${H}" style="width:100%;min-width:640px;font:12px system-ui">${g}</svg></div></div>`;
+}
 function vistaDia(dia, r, conKpis){
-  const c = comparar(r.cds.salidas, r.pb.salidas), d = esDia();
+  const c = comparar(r.cds.salidas, r.pb.salidas), d = esDia(), fr = franjas(r.cds.salidas, r.pb.salidas);
   let h = '';
   [['cds','Cruz del Sur'],['pb','Peru Bus']].forEach(([k,n])=>{ if(r[k].error) h+=`<div class="aviso"><b>${n}:</b> ${r[k].error}</div>`; });
   const sd = r.cds.salidas.filter(s=>s.sinDato||(s.vendidos==null&&!s.duplicadoDe)).length;
-  if(sd) h += `<div class="aviso"><b>Cruz del Sur:</b> ${sd} salida(s) están <b>sin dato</b> (la web limitó las consultas o no respondió). No se suman en los totales; ${d?'se volverán a leer antes de su salida, o pulsa ↻ para leerlas ahora':'puedes volver a generar el reporte más tarde'}.</div>`;
+  if(sd) h += `<div class="aviso"><b>Cruz del Sur:</b> ${sd} salida(s) <b>sin dato</b> <span class="conayuda" ${tip(`La web limitó las consultas o no respondió. No se suman en los totales; ${d?'se volverán a leer antes de su salida, o pulsa ↻ para leerlas ahora':'puedes volver a generar el reporte más tarde'}.`)}>ⓘ</span></div>`;
   if(conKpis){
     const rc=resumen(r.cds.salidas), rp=resumen(r.pb.salidas);
-    h += `<div class="kpis">${kpi('cds','Cruz del Sur',rc,tipVendidos('Cruz del Sur',r.cds.salidas,fCorta(dia.fecha)))}${kpi('pb','Peru Bus',rp,tipVendidos('Peru Bus',r.pb.salidas,fCorta(dia.fecha)))}${kpiCmp(c)}</div>`;
+    h += `<div class="kpis">${kpi('cds','Cruz del Sur',rc,tipVendidos('Cruz del Sur',r.cds.salidas,fCorta(dia.fecha)))}${kpi('pb','Peru Bus',rp,tipVendidos('Peru Bus',r.pb.salidas,fCorta(dia.fecha)))}${kpiFranjas(fr,rc,rp)}</div>`;
   }
-  const grupos = c.horas.map(x=>({etiqueta:x.hora, cds:x.cds, pb:x.pb, coinc:x.coinc}));
-  h += `<div class="card"><h3 class="sec">Vendidos por hora de salida · ${fLarga(dia.fecha)}</h3>${leyenda}<div class="grafico">${grafico(grupos)}</div></div>`;
-  const quedanRuta = esDia() && [...r.cds.salidas, ...r.pb.salidas].some(s=>!terminada(s));
-  h += `<div class="card"><div class="seccab"><h3 class="sec">Comparación por hora de salida</h3>${d&&!rep.completado&&!rep.detenido?`<button class="btn-sec" id="btnActRuta" ${quedanRuta?'':'disabled'} title="${quedanRuta?'Actualiza ahora todos los horarios de esta ruta que aún no parten':'Ya partieron todas las salidas de esta ruta'}">↻ Actualizar ahora todos los horarios de ${esc(r.nombre)}</button>`:''}</div><div class="tabla-wrap"><table>
-    <tr><th class="gen">Hora</th><th class="cds">CDS sal.</th><th class="cds">CDS vend.</th><th class="cds">CDS cap.</th><th class="pb">PB sal.</th><th class="pb">PB vend.</th><th class="pb">PB cap.</th><th class="gen" title="Diferencia de vendidos: Peru Bus − Cruz del Sur">Dif. PB−CDS</th>${d?'<th class="gen">Última act.</th>'+cabVentanas()+'<th class="gen">Próxima act.</th><th class="gen"></th>':''}</tr>` +
-    c.horas.map(x=>{ const df=x.pb.v-x.cds.v; const todasH = d ? [...r.cds.salidas.map(s=>Object.assign(s,{emp:'cds'})), ...r.pb.salidas.map(s=>Object.assign(s,{emp:'pb'}))].filter(s=>s.hora===x.hora) : [];
-      return `<tr class="${x.coinc?'coinc':''} ${d?claseFila(todasH):''}"><td><span class="hora">${x.hora}</span></td>
-      <td class="cds">${x.cds.n||''}</td><td class="cds" ${x.cds.n?tip(tipVendidos('Cruz del Sur',x.cds.l,x.hora)):''}>${x.cds.n?`<span class="num">${x.cds.v}</span>`:''}</td><td class="cds">${x.cds.n?x.cds.c:''}</td>
-      <td class="pb">${x.pb.n||''}</td><td class="pb" ${x.pb.n?tip(tipVendidos('Peru Bus',x.pb.l,x.hora)):''}>${x.pb.n?`<span class="num">${x.pb.v}</span>`:''}</td><td class="pb">${x.pb.n?x.pb.c:''}</td>
-      <td>${x.coinc?`<span class="${df>0?'pos':df<0?'neg':''}" style="font-size:17px">${df>0?'+':''}${df}</span>`:''}</td>${d?celdaUlt(todasH)+celdasVentanas(todasH)+celdaProx(todasH)+celdaBoton(todasH,`data-act-hora="${x.hora}"`):''}</tr>`; }).join('') +
-    `</table></div>${d && VENTANAS().length ? `<div class="ayuda" style="margin:6px 0 0">Columnas ${VENTANAS().map(m=>m+"'").join(' · ')}: lectura programada esos minutos antes de cada salida (un ícono por salida de esa hora) — <span class="v-ok">✔</span> hecha · <span class="v-err">✖</span> falló · ⏳ en cola · <span class="v-pen">○</span> pendiente · <span class="v-omi">–</span> omitida · 🔒 la venta cerró (atenuado: ya no se hizo por el cierre). Pasa el cursor sobre un ícono para ver la hora exacta.</div>` : ''}
-    <details data-k="cds"><summary>Todas las salidas de Cruz del Sur (${r.cds.salidas.length})</summary>${detalle(r.cds.salidas,'cds')}</details>
-    <details data-k="pb"><summary>Todas las salidas de Peru Bus (${r.pb.salidas.length})</summary>${detalle(r.pb.salidas,'pb')}</details></div>`;
+  if(VISTA==='grafico') return h + `<div class="card"><h3 class="sec">Vendidos por hora de salida</h3>${leyenda}<div class="grafico">${grafico(c.horas.map(x=>({etiqueta:x.hora, cds:x.cds, pb:x.pb, coinc:x.coinc})))}</div></div>`;
+  if(VISTA==='franjas') return h + tablaFranjas(fr);
+  if(VISTA==='curva' && d) return h + (curvaVentas(r) || '<div class="card vacio">Todavía no hay lecturas para dibujar la curva.</div>');
+  // ---- tabla (vista por defecto) ----
+  const filas = c.horas.map(x=>({ x, todasH: d ? [...r.cds.salidas.map(s=>Object.assign(s,{emp:'cds'})), ...r.pb.salidas.map(s=>Object.assign(s,{emp:'pb'}))].filter(s=>s.hora===x.hora) : [] }));
+  const term = f => d && f.todasH.length && f.todasH.every(terminada);
+  const nTerm = filas.filter(term).length, visibles = OCULTAR_TERM ? filas.filter(f=>!term(f)) : filas;
+  const cols = 3 + (d ? 3 + (hayLecturas()?1:0) : 0);
+  const quedanRuta = d && [...r.cds.salidas, ...r.pb.salidas].some(s=>!terminada(s));
+  const vend = (x, k, nombre, hora) => !x.n ? `<td class="${k}" data-label="${nombre}"></td>`
+    : `<td class="${k}" data-label="${nombre}" ${tip(tipVendidos(nombre, x.l, hora))}><span class="num">${x.v}</span><small class="cap">/${x.c}</small>${x.n>1?`<small class="nsal">${x.n} salidas</small>`:''}</td>`;
+  h += `<div class="card"><div class="tabla-wrap tabla-resp"><table>
+    <tr class="cab"><th class="gen">Hora</th><th class="cds" title="Vendidos / capacidad">Cruz del Sur</th><th class="pb" title="Vendidos / capacidad">Peru Bus</th>${d?'<th class="gen">Última</th>'+cabLecturas()+'<th class="gen">Próxima</th>'+`<th class="gen">${d&&!rep.completado&&!rep.detenido&&quedanRuta?`<button class="btnact" id="btnActRuta" title="Actualizar ahora todos los horarios de ${esc(r.nombre)} que aún no parten">↻ ruta</button>`:''}</th>`:''}</tr>` +
+    (nTerm ? `<tr class="togterm"><td colspan="${cols}"><button class="linkbtn" id="togTerm">${OCULTAR_TERM?`▸ Mostrar las ${nTerm} salidas que ya cerraron o partieron`:`▾ Ocultar las ${nTerm} salidas que ya cerraron o partieron`}</button></td></tr>` : '') +
+    visibles.map(({x, todasH})=>`<tr class="${x.coinc?'coinc':''} ${d?claseFila(todasH):''} ${term({todasH})?'term':''}"><td data-label="Hora"><span class="hora">${x.hora}</span></td>
+      ${vend(x.cds,'cds','Cruz del Sur',x.hora)}${vend(x.pb,'pb','Peru Bus',x.hora)}
+      ${d?celdaUlt(todasH)+celdaLecturas(todasH)+celdaProx(todasH)+celdaBoton(todasH,`data-act-hora="${x.hora}"`):''}</tr>`).join('') +
+    `</table></div>
+    <details data-k="cds"><summary>Detalle de todas las salidas de Cruz del Sur (${r.cds.salidas.length})</summary>${detalle(r.cds.salidas,'cds')}</details>
+    <details data-k="pb"><summary>Detalle de todas las salidas de Peru Bus (${r.pb.salidas.length})</summary>${detalle(r.pb.salidas,'pb')}</details></div>`;
   return h;
 }
 
@@ -1223,7 +1500,7 @@ function vistaRango(rutaId){
 
 // ---------------- render ----------------
 function mostrar(r){
-  rep = r; $('#btnExcel').disabled = !r.archivo; $('#btnJson').disabled = !r.archivo; $('#btnCsv').disabled = false;
+  rep = r;
   rutaSel = rutaSel || rep.dias[0].rutas[0].id; diaSel = rep.dias[0].fecha;
   if(r.tipo==='dia') vistos[r.fecha] = r.actualizaciones.length; // los avisos son solo para lo que llegue desde ahora
   pintar(); pintarHist();
@@ -1237,26 +1514,53 @@ function bloqueServicios(sv){
       ${x.incluidos.map(s=>`<span class="chip ${k}">${s}</span>`).join('')}${x.excluidos.map(s=>`<span class="chip off" title="No incluido">${s}</span>`).join('')}</div>`; };
   return `<div class="svbloque">${fila('cds','Cruz del Sur',sv.cds)}${fila('pb','Peru Bus',sv.pb)}</div>`;
 }
+// Franja fija arriba: qué día se está viendo, su estado, la ruta y la vista. Siempre visible al bajar.
+function bannerDia(){
+  const rutas = rep.dias[0].rutas, uno = rep.dias.length === 1, dia = esDia();
+  const est = !dia ? 'rep' : rep.completado ? 'fin' : rep.detenido ? 'det' : 'mon';
+  const f = rep.fecha || rep.desde, hoy = hoyLima();
+  const cuando = !uno ? '' : f===hoy ? 'HOY' : f>hoy ? (enDias(f)==='mañana' ? 'MAÑANA' : enDias(f).toUpperCase()) : '';
+  const estado = !dia ? `<span class="tagt ini">📸 Foto del ${fh(rep.generado)}</span>`
+    : rep.completado ? '<span class="tagt fin">✔ COMPLETADO</span>' : rep.detenido ? '<span class="tagt det">⏹ DETENIDO</span>' : '<span class="tagt mon">● EN MONITOREO</span>';
+  const may = t => t.charAt(0).toUpperCase() + t.slice(1);
+  const titulo = may(uno ? fLarga(f) : `${fLarga(rep.desde)} al ${fLarga(rep.hasta)}`);
+  const vistas = !uno ? '' : `<span class="switch vistas">${[['tabla','📋 Tabla'],['grafico','📊 Gráfico'],['franjas','⏰ Por franjas'],...(dia?[['curva','📈 Curva de ventas']]:[])]
+    .map(([k,n])=>`<button data-vista="${k}" class="${VISTA===k?'on':''}">${n}</button>`).join('')}</span>`;
+  return `<div class="banner b-${est}"><div class="bn-fila">
+      <div class="bn-dia"><span class="bn-sup">${dia?'👁 Estás viendo el monitoreo del':'👁 Estás viendo el reporte del'}</span><span class="bn-fecha">${titulo}${cuando?` <span class="bn-cuando">${cuando}</span>`:''}</span></div>
+      ${estado}</div>
+    <div class="bn-fila"><div class="tabs">${rutas.map(x=>`<button data-ruta="${x.id}" class="${x.id===rutaSel?'on':''}">${x.nombre}</button>`).join('')}</div>${vistas}</div></div>`;
+}
 function cabeceraDia(){
   const acts = rep.actualizaciones.filter(a=>a.id), ult = acts[acts.length-1];
   const enC = (COLA.enCurso[rep.fecha]||[]).length, pend = (COLA.enCola[rep.fecha]||[]).length;
   const todas = rep.dias[0].rutas.flatMap(r=>[...r.cds.salidas,...r.pb.salidas]);
   const quedan = todas.filter(s=>!terminada(s)).length, nCerr = todas.filter(s=>s.cerrada).length;
+  const pr = rep.proxRefresco;
   const estado = enC ? `<span class="spin"></span> Actualizando ${enC} salida(s)…${pend?` · ${pend} en cola`:''}`
     : pend ? `⏳ ${pend} salida(s) en cola`
-    : rep.proxima ? `Próxima actualización programada: <b>${hm(rep.proxima.t)}</b> (${enMin(Date.parse(rep.proxima.t))}) · salida ${rep.proxima.hora} ${pillEmp(rep.proxima.emp)} ${esc(rep.proxima.servicio)}, ${rep.proxima.m} min antes`
-    : (MON&&MON.actualizarSalidas !== false ? 'No quedan actualizaciones programadas para este día.' : 'Actualizaciones antes de cada salida desactivadas (⚙ Configuración → Monitoreo).');
-  const futuro = rep.fecha > hoyLima(), pr = rep.proxRefresco;
-  const total = !pr ? '' : pr.enCola ? ' · ↻ actualización total en cola (esperando un buen momento)'
-    : ` · ↻ próxima actualización completa entre <b>${hm(pr.t)}</b> y <b>${hm(pr.hasta)}</b> (${Date.parse(pr.t) <= Date.now() ? 'en cuanto haya un buen momento' : enMin(Date.parse(pr.t))}; cada ${pr.min} a ${pr.max} h)`;
-  const aviso = futuro ? `<div class="pista" style="margin-top:6px">📆 Día siguiente (${enDias(rep.fecha)}): se monitorea por adelantado. Hasta que llegue su día se relee completo periódicamente; luego sigue las lecturas antes de cada salida.</div>` : '';
-  const pie = rep.completado ? `<div class="finbar">✔ <b>Monitoreo COMPLETADO</b> el ${fh(rep.completado)}: ya no quedan salidas por partir. No se consulta nada más; los datos quedan como registro final.</div>`
-    : rep.detenido ? `<div class="detbar">⏹ <b>Actualizaciones DETENIDAS</b> por el administrador el ${fh(rep.detenido)}. No se consulta nada hasta que se reanude.</div>`
-    : `<div class="monbar"><button class="btn-main btn-grande" id="btnActTodas" ${quedan?'':'disabled'} title="Actualiza ahora todas las salidas que aún no parten, en las dos rutas">↻ Actualizar ahora todos los horarios</button><span class="estado">${estado}${total}</span></div>${aviso}`;
-  const adm = ROL!=='admin' ? '' : `<span class="admbar">${rep.completado ? '' : rep.detenido ? '<button class="btn-adm" id="admReanudar">▶ Reanudar actualizaciones</button>' : '<button class="btn-adm" id="admDetener">⏹ Detener actualizaciones</button>'}<button class="btn-adm peligro" id="admBorrar">🗑 Eliminar día</button></span>`;
-  return `<div class="card"><div class="seccab"><h3 class="sec">Monitoreo del ${fLarga(rep.fecha)}</h3>${tagOrigen(rep)}${rep.completado?'<span class="tagt fin">✔ COMPLETADO</span>':''}${rep.detenido?'<span class="tagt det">⏹ DETENIDO</span>':''}${adm}</div>
-    <div class="ayuda" style="margin:0">Recorrido inicial ${fh(rep.creado)}${ult?` · última actualización <b>${hm(ult.t)}</b>`:''} · ${rep.completado ? `${todas.length} salidas registradas` : `${quedan} de ${todas.length} salidas aún no parten`}${nCerr ? ` · 🔒 ${nCerr} cerraron la venta` : ''}</div>${bloqueServicios(rep.servicios)}
-    ${pie}</div>`;
+    : rep.proxima ? `<span ${tip(`Salida de las ${rep.proxima.hora} · ${esc(rep.proxima.servicio)} · ${esc(rep.proxima.ruta||'')}<br>Lectura ${rep.proxima.m} min antes de salir`)} class="conayuda">Próxima lectura <b>${hm24(Date.parse(rep.proxima.t))}</b> · ${pillEmp(rep.proxima.emp)} ${rep.proxima.hora} · ${enMin(Date.parse(rep.proxima.t))}</span>`
+    : (MON&&MON.actualizarSalidas !== false ? 'No quedan lecturas programadas.' : 'Lecturas programadas apagadas.');
+  const completa = !pr ? '' : `<span class="ayuda conayuda" style="margin:0" ${tip(`<h4>↻ Actualización completa</h4>Vuelve a leer todas las salidas del día (y suma las nuevas) cada ${pr.min} a ${pr.max} h, en un momento sin lecturas cercanas.${pr.enCola?'<br>Ahora: en cola, esperando un buen momento.':`<br>Próxima: entre las ${hm(pr.t)} y las ${hm(pr.hasta)}.`}`)}>↻ completa ${pr.enCola ? 'en cola' : `~${hm24(Date.parse(pr.t))}`}</span>`;
+  // Detalles (desplegable): servicios, semana anterior, aviso de día por adelantado.
+  const ant = HIST.find(m => m.tipo==='dia' && m.fecha===sumarDias(rep.fecha,-7) && m.vendidos);
+  const tot = e => rep.dias[0].rutas.flatMap(r=>r[e].salidas).filter(cuenta).reduce((a,s)=>a+s.vendidos,0);
+  const det = `<div>Recorrido inicial: <b>${fh(rep.creado)}</b> · ${tagOrigen(rep)}${ult?` · última lectura: <b>${fh(ult.t)}</b>`:''}</div>`
+    + (ant ? `<div>📅 Mismo día de la semana anterior (${fCorta(ant.fecha)}): Cruz del Sur <b>${ant.vendidos.cds}</b> · Peru Bus <b>${ant.vendidos.pb}</b> vendidos${ant.completado?' (finales)':''}. Este día va: Cruz del Sur <b>${tot('cds')}</b> · Peru Bus <b>${tot('pb')}</b>.</div>` : '')
+    + (rep.fecha > hoyLima() ? `<div>📆 Día siguiente: se monitorea por adelantado. Hasta que llegue su día se relee completo cada cierto tiempo; luego sigue las lecturas antes de cada salida.</div>` : '')
+    + bloqueServicios(rep.servicios);
+  const adm = ROL!=='admin' ? '' : `<details class="menu"><summary title="Acciones del administrador">⋯</summary><div class="menu-lista">${rep.completado ? '' : rep.detenido ? '<button class="btn-adm" id="admReanudar">▶ Reanudar actualizaciones</button>' : '<button class="btn-adm" id="admDetener">⏹ Detener actualizaciones</button>'}<button class="btn-adm peligro" id="admBorrar">🗑 Eliminar día</button></div></details>`;
+  const accion = rep.completado ? `<span class="ok-t">✔ Completado el ${fh(rep.completado)}: ya no se consulta nada más.</span>`
+    : rep.detenido ? `<span class="err-t">⏹ Detenido por el administrador el ${fh(rep.detenido)}.</span>`
+    : `<button class="btn-main" id="btnActTodas" ${quedan?'':'disabled'} title="Lee ahora todas las salidas que aún no parten, en las dos rutas">↻ Actualizar todo ahora</button><span class="estado">${estado}</span>${completa}`;
+  return `<div class="card diacab"><div class="dc-fila">${accion}
+      <span class="dc-datos"><b>${quedan}</b> de ${todas.length} por partir${nCerr?` · 🔒 ${nCerr} cerraron`:''}</span>
+      <button class="linkbtn" id="dcMas">${DC_ABIERTO?'▾ Ocultar detalles':'▸ Detalles'}</button>${botonesDescarga()}${adm}</div>
+    ${DC_ABIERTO ? `<div class="dc-det">${det}</div>` : ''}</div>`;
+}
+function cabeceraReporte(){
+  return `<div class="card diacab"><div class="dc-fila"><span class="dc-datos">Datos tomados el <b>${new Date(rep.generado).toLocaleString('es-PE')}</b>${rep.dias.length>1?` · ${rep.dias.length} días`:''}</span>
+    <button class="linkbtn" id="dcMas">${DC_ABIERTO?'▾ Ocultar servicios':'▸ Servicios'}</button>${botonesDescarga()}</div>${DC_ABIERTO ? `<div class="dc-det">${bloqueServicios(rep.servicios)}</div>` : ''}</div>`;
 }
 function pintar(){
   if(!rep) return;
@@ -1264,9 +1568,8 @@ function pintar(){
   const uno = rep.dias.length === 1;
   const rutas = rep.dias[0].rutas;
   if(!rutas.find(x=>x.id===rutaSel)) rutaSel = rutas[0].id;
-  let h = esDia() ? cabeceraDia()
-    : `<div class="card"><b>${uno ? 'Reporte del '+fLarga(rep.desde) : `Reporte del ${fLarga(rep.desde)} al ${fLarga(rep.hasta)} (${rep.dias.length} días)`}</b> · datos tomados el ${new Date(rep.generado).toLocaleString('es-PE')}${bloqueServicios(rep.servicios)}</div>`;
-  h += `<div class="tabs">${rutas.map(x=>`<button data-ruta="${x.id}" class="${x.id===rutaSel?'on':''}">${x.nombre}</button>`).join('')}</div>`;
+  if(VISTA==='curva' && !esDia()) VISTA = 'tabla';
+  let h = bannerDia() + (esDia() ? cabeceraDia() : cabeceraReporte());
   h += uno ? vistaDia(rep.dias[0], rep.dias[0].rutas.find(x=>x.id===rutaSel), true) : vistaRango(rutaSel);
   // Al repintar (datos en vivo) se conservan los desplegables abiertos y el scroll de las tablas.
   const abiertos = [...$$('#reporte details[data-k]')].filter(d=>d.open).map(d=>d.dataset.k);
@@ -1275,6 +1578,11 @@ function pintar(){
   abiertos.forEach(k=>{ const d=$(`#reporte details[data-k="${k}"]`); if(d) d.open = true; });
   $$('#reporte .tabla-wrap').forEach((w,i)=>{ if(scrolls[i]) w.scrollTop = scrolls[i]; });
   $$('#reporte .tabs button').forEach(b=>b.onclick=()=>{ rutaSel=b.dataset.ruta; pintar(); });
+  $$('#reporte [data-vista]').forEach(b=>b.onclick=()=>{ VISTA=b.dataset.vista; guardarPref('vista', VISTA); pintar(); });
+  const bx = $('#btnExcel'); if(bx) bx.onclick = () => { location.href = '/api/excel/' + encodeURIComponent(rep.archivo); };
+  const bj = $('#btnJson'); if(bj) bj.onclick = () => { location.href = '/api/historial/' + encodeURIComponent(rep.archivo) + '?descargar=1'; };
+  const dm = $('#dcMas'); if(dm) dm.onclick = () => { DC_ABIERTO = !DC_ABIERTO; guardarPref('detDia', DC_ABIERTO?'1':'0'); pintar(); };
+  const tt = $('#togTerm'); if(tt) tt.onclick = () => { OCULTAR_TERM = !OCULTAR_TERM; guardarPref('ocultarTerm', OCULTAR_TERM?'1':'0'); pintar(); };
   if(esDia()){
     const salidasDe = (filtro) => rep.dias[0].rutas.flatMap(r=>[...r.cds.salidas,...r.pb.salidas].filter(s=>filtro(r,s))).map(s=>s.id);
     const bt = $('#btnActTodas'); if(bt) bt.onclick = async () => { const n = idsFuturas().length;
@@ -1290,27 +1598,18 @@ function pintar(){
     const bb = $('#admBorrar'); if(bb) bb.onclick = () => borrarReporte(rep.archivo);
     $$('[data-act-hora]').forEach(b=>b.onclick=()=>pedirAct({hora:b.dataset.actHora, ruta:rutaSel, via:'fila'}, salidasDe((r,s)=>r.id===rutaSel && s.hora===b.dataset.actHora)));
   }
+  const cs = $('#curvaSel'); if(cs) cs.onchange = () => { CURVA_SEL = cs.value || null; pintar(); };
   $$('[data-dia]').forEach(el=>el.addEventListener('click',()=>{ diaSel=el.dataset.dia; pintar(); $('.diabar') && $('.diabar').scrollIntoView({behavior:'smooth'}); }));
   const sd = $('#selDia'); if(sd) sd.onchange = () => { diaSel = sd.value; pintar(); $('.diabar').scrollIntoView(); };
 }
 
-$('#btnExcel').onclick = () => { if(rep && rep.archivo) location.href = '/api/excel/' + encodeURIComponent(rep.archivo); };
-$('#btnJson').onclick = () => { if(rep && rep.archivo) location.href = '/api/historial/' + encodeURIComponent(rep.archivo) + '?descargar=1'; };
-$('#btnCsv').onclick = () => {
-  if(!rep) return;
-  const filas = [['Fecha','Ruta','Empresa','Hora','Llegada','Servicio','Origen','Destino','Precio','Capacidad','Libres','Vendidos','Vendidos por tipo de asiento','Ingreso estimado','Se suma','Nota','Última actualización']];
-  rep.dias.forEach(d=>d.rutas.forEach(r=>[['cds','Cruz del Sur'],['pb','Peru Bus']].forEach(([k,n])=>r[k].salidas.forEach(s=>
-    filas.push([d.fecha,r.nombre,n,s.hora,s.llegada,s.servicio,s.origen,s.destino,s.precio,s.capacidad,s.libres,s.vendidos,
-      s.porTarifa?Object.entries(s.porTarifa).map(([t,c])=>`${t}: ${c}`).join(' | '):'', s.ingresoEstimado??'', cuenta(s)?'Sí':'No', s.nota, fh(s.actualizado)])))));
-  const csv = '﻿' + filas.map(f=>f.map(v=>`"${String(v??'').replace(/"/g,'""')}"`).join(';')).join('\r\n');
-  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
-  a.download = `reporte_${rep.desde}${rep.desde!==rep.hasta?'_a_'+rep.hasta:''}.csv`; a.click();
-};
+// Descargas del día (o reporte) abierto: están en su propia cabecera, junto a lo que se está viendo.
+const botonesDescarga = () => !rep || !rep.archivo ? '' : `<span class="descargas"><button class="btn-sec" id="btnExcel" ${tipA('Todo este '+(esDia()?'día':'reporte')+' en Excel: las dos rutas, cada salida'+(esDia()?', cada lectura (hoja “Evolución”) y el registro de actualizaciones':'')+'.')}>⬇ Excel</button>${ROL==='admin'?'<button class="btn-sec" id="btnJson" title="Datos completos en JSON (solo admin)">JSON</button>':''}</span>`;
 async function borrarReporte(f){
   if(!(await preguntar({ titulo: '🗑 Eliminar', texto: f.startsWith('dia_') ? `¿Eliminar definitivamente el monitoreo del <b>${fLarga(f.slice(4,14))}</b>? Se borra de inmediato, aunque se esté actualizando, y <b>no se puede deshacer</b>.` : `¿Eliminar definitivamente <b>${esc(f)}</b>? No se puede deshacer.`, si: 'Eliminar', peligro: true }))) return;
   const r = await fetch('/api/admin/reportes/' + encodeURIComponent(f), {method:'DELETE'});
   if(!r.ok) return alert((await r.json()).error);
-  if(rep && rep.archivo===f){ rep = null; $('#reporte').innerHTML = '<div class="card vacio">Eliminado.</div>'; ['#btnExcel','#btnJson','#btnCsv'].forEach(b=>$(b).disabled=true); }
+  if(rep && rep.archivo===f){ rep = null; $('#reporte').innerHTML = '<div class="card vacio">Eliminado.</div>'; }
   histExp.delete(f); delete detCache[f]; cargarHistorial();  toast(`<h4>🗑 Eliminado</h4><div class="linea">${esc(f)}</div>`, 'info');
 }
 </script>

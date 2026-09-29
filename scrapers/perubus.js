@@ -62,20 +62,23 @@ async function scrapePeruBus(page, { origen, destino, fecha, config, log }) {
     .filter((c) => c.salida && (!c.fechaTxt || c.fechaTxt.includes(ddmm)))
     .map((c) => {
       const capacidad = cap[c.servicio] || cap.default || 46;
-      const cerrado = c.agotado && !c.precio;
+      // "Agotado" = no quedan asientos: el bus está lleno (vendidos = capacidad).
+      const lleno = c.agotado && c.restantes == null;
+      const restantes = lleno ? 0 : c.restantes;
+      const vendidos = restantes == null ? null : Math.max(0, capacidad - restantes);
       return {
         hora: a24h(c.salida), llegada: a24h(c.llegada), servicio: c.servicio,
         origen: origen === 'lima' ? 'Lima [Av. México 333]' : 'Ica', destino: destino === 'lima' ? 'Lima' : 'Ica',
         escalas: null, precio: c.precio, capacidad,
-        libres: cerrado ? null : c.restantes,
-        vendidos: cerrado || c.restantes == null ? null : Math.max(0, capacidad - c.restantes),
+        libres: restantes,
+        vendidos,
         // Peru Bus usa un solo tipo de asiento por bus (en el mapa, todos los asientos de un bus
         // "Servicio Vip" dicen "SERVICIO VIP"; los de un "Express", "Express"). Por eso el tipo de
         // asiento vendido es el del servicio, al precio que muestra la salida.
-        porTarifa: cerrado || c.restantes == null ? null : { [`${c.servicio || 'Asiento'} S/ ${c.precio ?? '?'}`]: Math.max(0, capacidad - c.restantes) },
-        ingresoEstimado: cerrado || c.restantes == null || !c.precio ? null : Math.max(0, capacidad - c.restantes) * c.precio,
+        porTarifa: vendidos == null ? null : { [`${c.servicio || 'Asiento'} S/ ${c.precio ?? '?'}`]: vendidos },
+        ingresoEstimado: vendidos == null || !c.precio ? null : vendidos * c.precio,
         duplicadoDe: null,
-        nota: cerrado ? "La web la muestra 'Agotado' sin precio (posible salida cerrada); no se suma." : '',
+        nota: lleno ? 'Agotado: la web ya no ofrece asientos (bus lleno).' : '',
       };
     })
     .sort((a, b) => a.hora.localeCompare(b.hora));

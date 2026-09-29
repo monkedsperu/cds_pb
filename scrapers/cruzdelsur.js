@@ -60,6 +60,10 @@ function ritmoCompartido(espacioMs, log) {
   return ritmoGlobal;
 }
 
+// Estado del token según la última respuesta de Cruz del Sur (la página avisa si fue rechazado).
+const estadoToken = { ok: null, t: null, error: null };
+const marcarToken = (ok, error = null) => Object.assign(estadoToken, { ok, t: new Date().toISOString(), error });
+
 function cabeceras(token) {
   return {
     accept: 'application/json', 'content-type': 'application/json', 'accept-language': 'es-PE',
@@ -75,6 +79,7 @@ function crearPedir(ritmo, pausa429Ms) {
       let r;
       try { r = await fetch(url, { ...opciones, signal: AbortSignal.timeout(30000) }); }
       catch (e) { if (i >= intentos) throw e; await sleep(2000 * i); continue; }
+      if (r.status === 401 || r.status === 403) marcarToken(false, `Cruz del Sur rechazó el token (HTTP ${r.status}).`);
       if (r.status === 401 || r.status === 403) throw Object.assign(new Error(`Cruz del Sur rechazó el token (HTTP ${r.status}). Actualízalo en ⚙ Configuración.`), { fatal: true });
       if (r.status === 429) {
         const ra = Number(r.headers.get('retry-after'));
@@ -83,7 +88,7 @@ function crearPedir(ritmo, pausa429Ms) {
         continue;
       }
       if (!r.ok) { if (i >= intentos) throw new Error(`HTTP ${r.status}`); await sleep(2000 * i); continue; }
-      ritmo.ok();
+      ritmo.ok(); if (estadoToken.ok !== true) marcarToken(true);
       return r.json();
     }
   };
@@ -258,4 +263,4 @@ async function probarToken(token) {
   return { ok: true, detalle: `Token válido: se leyó el mapa de asientos de prueba (${m.vendidos + m.libres} asientos).` };
 }
 
-module.exports = { scrapeCruzDelSur, leerBuses, probarToken, codigoBus };
+module.exports = { scrapeCruzDelSur, leerBuses, probarToken, codigoBus, estadoToken, marcarToken };

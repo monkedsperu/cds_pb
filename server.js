@@ -11,19 +11,33 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
-const { probarToken } = require('./scrapers/cruzdelsur');
-const { construirExcel } = require('./lib/reporteExcel');
+const { probarToken, estadoToken, marcarToken } = require('./scrapers/cruzdelsur');
+const { construirExcel, construirHistorico } = require('./lib/reporteExcel');
 const { crearMonitor, MONITOR_INICIAL, REPORTE_AUTO_INICIAL } = require('./lib/monitor');
 
-// Últimas líneas de la consola, para el panel "Ver logs" del admin. Solo en memoria y con tope fijo.
+// Últimas líneas de la consola, para el panel "Ver logs" del admin (en memoria, con tope fijo).
+// Además todo se escribe en logs/AAAA-MM-DD.log (hora de Lima); se conservan los últimos DIAS_LOG días.
 const LOGS = []; const MAX_LOGS = 200; let nLog = 0;
+const LOGDIR = path.join(__dirname, 'logs'); const DIAS_LOG = 14;
+fs.mkdirSync(LOGDIR, { recursive: true });
+let logDia = null; let logArchivo = null;
+function aArchivo(nivel, l) {
+  const ahora = new Date(Date.now() - 5 * 36e5).toISOString(); const dia = ahora.slice(0, 10);
+  if (dia !== logDia) {
+    if (logArchivo) logArchivo.end();
+    logDia = dia; logArchivo = fs.createWriteStream(path.join(LOGDIR, `${dia}.log`), { flags: 'a' });
+    const limite = new Date(Date.now() - 5 * 36e5 - DIAS_LOG * 864e5).toISOString().slice(0, 10);
+    for (const f of fs.readdirSync(LOGDIR)) if (/^\d{4}-\d{2}-\d{2}\.log$/.test(f) && f.slice(0, 10) < limite) fs.unlink(path.join(LOGDIR, f), () => {});
+  }
+  logArchivo.write(`${ahora.slice(11, 19)} ${nivel === 'log' ? '' : `[${nivel}] `}${l}\n`);
+}
 for (const nivel of ['log', 'warn', 'error']) {
   const original = console[nivel].bind(console);
   console[nivel] = (...args) => {
     original(...args);
     try {
       const txt = args.map((x) => (typeof x === 'string' ? x : x instanceof Error ? (x.stack || x.message) : JSON.stringify(x))).join(' ');
-      for (const l of txt.split('\n')) if (l.trim()) LOGS.push({ i: ++nLog, t: Date.now(), n: nivel, l: l.slice(0, 500) });
+      for (const l of txt.split('\n')) if (l.trim()) { LOGS.push({ i: ++nLog, t: Date.now(), n: nivel, l: l.slice(0, 500) }); aArchivo(nivel, l); }
       if (LOGS.length > MAX_LOGS) LOGS.splice(0, LOGS.length - MAX_LOGS);
     } catch (_) { /* nunca romper por un log */ }
   };
@@ -68,6 +82,8 @@ const huella = (clave) => crypto.createHash('sha256').update('mb:' + clave).dige
 // se agregan marcados. Se guarda en el servidor (no en cookies) porque decide qué consulta
 // el servidor y así vale para todos los usuarios y sobrevive a reinicios.
 const AJUSTES = path.join(DATA, 'ajustes.json');
+// Archivos internos de data/: nunca se listan, se abren ni se descargan desde la página.
+const interno = (f) => f === 'ajustes.json' || f === 'sesiones.json';
 const SERVICIOS_INICIALES = {
   cds: ['Evolution', 'Suite', 'Confort Suite', 'Ica Express', 'Ica Eco Express', 'Cruzero Plus'],
   pb: ['Servicio Vip', 'Express', 'Express Paracas', 'Salon Cama'],
@@ -82,6 +98,8 @@ function leerAjustes() {
   a.reporteAuto = { ...REPORTE_AUTO_INICIAL, ...(a.reporteAuto || {}) };
   delete a.auto;
   delete a.permitirRangoUsuarios; // la búsqueda por rango de fechas ya no existe: todo es del día de hoy
+  a.capacidadPb = a.capacidadPb || {};                                  // capacidad real de cada servicio de Peru Bus
+  if (typeof a.limpiezaDias !== 'number') a.limpiezaDias = 90;          // reportes al instante más viejos se borran (0 = nunca)
   for (const emp of ['cds', 'pb']) {
     a.servicios[emp] = a.servicios[emp] || {};
     for (const n of SERVICIOS_INICIALES[emp]) if (!(n in a.servicios[emp])) a.servicios[emp][n] = true;
@@ -97,6 +115,14 @@ function registrarServicios(emp, nombres) {
 
 // ---------------- sesiones (en memoria) ----------------
 const sesiones = new Map(); // id -> { vence, rol: 'admin'|'usuario', huella }
+// Se guardan en data/sesiones.json para que reiniciar el servidor no cierre la sesión de nadie.
+const SESIONES = path.join(DATA, 'sesiones.json');
+try { for (const [id, s] of Object.entries(JSON.parse(fs.readFileSync(SESIONES, 'utf8')))) if (s.vence > Date.now()) sesiones.set(id, s); } catch (_) {}
+let guardarSesionesT = null;
+const guardarSesiones = () => { clearTimeout(guardarSesionesT); guardarSesionesT = setTimeout(() => {
+  for (const [id, s] of sesiones) if (s.vence < Date.now()) sesiones.delete(id);
+  fs.writeFile(SESIONES, JSON.stringify(Object.fromEntries(sesiones)), () => {});
+}, 500); };
 const intentos = new Map(); // ip -> {n, hasta}
 function iguales(a, b) {
   const x = crypto.createHash('sha256').update(a).digest(); const y = crypto.createHash('sha256').update(b).digest();
@@ -106,7 +132,7 @@ function sesionDe(req) {
   const c = Object.fromEntries((req.headers.cookie || '').split(';').map((p) => p.trim().split('=')).filter((p) => p.length === 2));
   const s = c.sid && sesiones.get(c.sid);
   if (!s) return null;
-  if (s.vence < Date.now()) { sesiones.delete(c.sid); return null; }
+  if (s.vence < Date.now()) { sesiones.delete(c.sid); guardarSesiones(); return null; }
   return s;
 }
 // Quién hizo un pedido: rol, qué contraseña de usuario (por número, nunca la contraseña) e IP.
@@ -159,6 +185,36 @@ function metaReporte(f) {
   return meta;
 }
 
+// ---------------- tareas de mantenimiento ----------------
+// Prueba del token: cada 6 h y ~30 min antes del inicio automático, para avisar ANTES de que falle el cron.
+const pruebaToken = { t: null, preCron: null };
+async function probarTokenAhora(motivo) {
+  if (!tokenCDS()) return;
+  pruebaToken.t = new Date().toISOString();
+  try { await probarToken(tokenCDS()); marcarToken(true); console.log(`Token de Cruz del Sur OK (prueba ${motivo}).`); }
+  catch (e) { if (estadoToken.ok !== false) marcarToken(false, e.message); console.warn(`Token de Cruz del Sur: la prueba ${motivo} falló: ${e.message}`); }
+}
+function revisarToken() {
+  const M = leerAjustes().monitor; const hoy = hoyLima();
+  const [h, m] = (M.hora || '03:00').split(':').map(Number); const ahoraMin = Number(new Date(Date.now() - 5 * 36e5).toISOString().slice(11, 13)) * 60 + Number(new Date(Date.now() - 5 * 36e5).toISOString().slice(14, 16));
+  const faltan = h * 60 + m - ahoraMin;
+  if (M.activa && faltan > 0 && faltan <= 35 && pruebaToken.preCron !== hoy) { pruebaToken.preCron = hoy; return probarTokenAhora('antes del inicio automático'); }
+  if (!pruebaToken.t || Date.now() - Date.parse(pruebaToken.t) > 6 * 36e5) return probarTokenAhora('periódica');
+}
+// Limpieza: los reportes al instante más viejos que "limpiezaDias" se borran (los días monitoreados no se tocan).
+function limpiarReportes() {
+  const dias = leerAjustes().limpiezaDias; if (!dias) return;
+  const limite = Date.now() - dias * 864e5; let n = 0;
+  for (const f of fs.readdirSync(DATA)) {
+    if (!/^(auto_)?reporte_.*\.json$/.test(f)) continue;
+    const p = path.join(DATA, f); if (fs.statSync(p).mtimeMs < limite) { fs.unlinkSync(p); cacheMeta.delete(f); n++; }
+  }
+  if (n) console.log(`Limpieza: se borraron ${n} reporte(s) al instante de más de ${dias} días.`);
+}
+setTimeout(() => { revisarToken(); limpiarReportes(); }, 20000);
+setInterval(() => { try { revisarToken(); } catch (e) { console.error('Token:', e.message); } }, 5 * 60000);
+setInterval(() => { try { limpiarReportes(); } catch (e) { console.error('Limpieza:', e.message); } }, 6 * 36e5);
+
 // ---------------- HTTP ----------------
 function json(res, code, obj, extra = {}) { res.writeHead(code, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store', ...extra }); res.end(JSON.stringify(obj)); }
 async function cuerpo(req) { let b = ''; for await (const c of req) { b += c; if (b.length > 1e5) break; } try { return JSON.parse(b || '{}'); } catch (_) { return {}; } }
@@ -191,7 +247,7 @@ http.createServer(async (req, res) => {
       }
       intentos.delete(ip);
       const sid = crypto.randomBytes(32).toString('hex');
-      sesiones.set(sid, { vence: Date.now() + HORAS_SESION * 36e5, rol: esAdmin ? 'admin' : 'usuario', huella: huella(clave) });
+      sesiones.set(sid, { vence: Date.now() + HORAS_SESION * 36e5, rol: esAdmin ? 'admin' : 'usuario', huella: huella(clave) }); guardarSesiones();
       const seguro = req.headers['x-forwarded-proto'] === 'https' ? '; Secure' : '';
       return json(res, 200, { ok: true }, { 'set-cookie': `sid=${sid}; HttpOnly; SameSite=Strict; Path=/; Max-Age=${HORAS_SESION * 3600}${seguro}` });
     }
@@ -204,7 +260,7 @@ http.createServer(async (req, res) => {
     }
 
     if (req.method === 'POST' && u.pathname === '/api/logout') {
-      const c = (req.headers.cookie || '').match(/sid=([a-f0-9]+)/); if (c) sesiones.delete(c[1]);
+      const c = (req.headers.cookie || '').match(/sid=([a-f0-9]+)/); if (c) { sesiones.delete(c[1]); guardarSesiones(); }
       return json(res, 200, { ok: true }, { 'set-cookie': 'sid=; Path=/; Max-Age=0' });
     }
     // --- monitoreo por día ---
@@ -247,6 +303,12 @@ http.createServer(async (req, res) => {
       return json(res, 200, { id: monitor.generarReporte(fecha, fecha, ses.rol, 'manual', null, sel).id });
     }
     if (u.pathname === '/api/cola') return json(res, 200, monitor.estadoCola());
+    // Barra de estado (todas las pantallas): token, cron, qué se está haciendo y próxima lectura.
+    if (u.pathname === '/api/sistema') {
+      const a = leerAjustes(); const M = a.monitor;
+      return json(res, 200, { token: { configurado: !!tokenCDS(), ...estadoToken, probado: pruebaToken.t }, cron: { activa: M.activa, hora: M.hora, perpetuo: M.perpetuo, vigHasta: M.vigHasta },
+        reporteAuto: { activa: a.reporteAuto.activa, horas: a.reporteAuto.horas }, ...monitor.resumenSistema() });
+    }
     if (req.method === 'POST' && u.pathname === '/api/cancelar') {
       if (ses.rol !== 'admin') return json(res, 403, { error: 'Solo el administrador puede cancelar o detener actualizaciones.' });
       const { carril } = await cuerpo(req);
@@ -259,7 +321,7 @@ http.createServer(async (req, res) => {
     }
     if (u.pathname === '/api/historial') {
       const tipo = u.searchParams.get('tipo'); // 'dia' | 'reporte' | (vacío = todos)
-      const reportes = tipo === 'dia' ? [] : fs.readdirSync(DATA).filter((f) => f.endsWith('.json') && f !== 'ajustes.json' && !f.startsWith('dia_')).map(metaReporte);
+      const reportes = tipo === 'dia' ? [] : fs.readdirSync(DATA).filter((f) => f.endsWith('.json') && !interno(f) && !f.startsWith('dia_')).map(metaReporte);
       const lista = [...(tipo === 'reporte' ? [] : monitor.metaDias()), ...reportes];
       return json(res, 200, lista.sort((a, b) => String(b.desde || '').localeCompare(String(a.desde || '')) || String(b.generado || '').localeCompare(String(a.generado || ''))));
     }
@@ -271,7 +333,7 @@ http.createServer(async (req, res) => {
     if (u.pathname.startsWith('/api/historial/')) {
       const f = path.basename(decodeURIComponent(u.pathname.split('/').pop()));
       const p = path.join(DATA, f);
-      if (f === 'ajustes.json' || !fs.existsSync(p)) return json(res, 404, { error: 'No existe' });
+      if (interno(f) || !fs.existsSync(p)) return json(res, 404, { error: 'No existe' });
       const r = normalizar(JSON.parse(fs.readFileSync(p, 'utf8'))); r.archivo = f;
       if (u.searchParams.get('descargar')) {
         if (ses.rol !== 'admin') return json(res, 403, { error: 'Solo el administrador puede descargar el JSON.' });
@@ -283,15 +345,23 @@ http.createServer(async (req, res) => {
       const M = leerAjustes().monitor;
       return json(res, 200, { hoy: hoyLima(), enCurso: { monitor: monitor.trabajoActivo('monitor'), reporte: monitor.trabajoActivo('reporte') }, rol: ses.rol,
         monitor: ses.rol === 'admin' ? M : { activa: M.activa, perpetuo: M.perpetuo, actualizarSalidas: M.actualizarSalidas, hora: M.hora, minutosAntes: M.minutosAntes, vigDesde: M.vigDesde, vigHasta: M.vigHasta,
-          diasAdelante: M.diasAdelante, refrescoFuturoHoras: M.refrescoFuturoHoras, refrescoFuturoMaxHoras: M.refrescoFuturoMaxHoras, refrescoHoyHoras: M.refrescoHoyHoras, refrescoHoyMaxHoras: M.refrescoHoyMaxHoras },
+          minutosAntesPb: M.minutosAntesPb, cierreMin: M.cierreMin, diasAdelante: M.diasAdelante, refrescoFuturoHoras: M.refrescoFuturoHoras, refrescoFuturoMaxHoras: M.refrescoFuturoMaxHoras, refrescoHoyHoras: M.refrescoHoyHoras, refrescoHoyMaxHoras: M.refrescoHoyMaxHoras },
         reporteAuto: (({ hechas, ...R }) => R)(leerAjustes().reporteAuto) });
     }
 
+    // --- Excel histórico: todos los días monitoreados, una fila por salida con su último dato ---
+    if (u.pathname === '/api/excel-historico') {
+      const dias = fs.readdirSync(DATA).filter((f) => /^dia_\d{4}-\d{2}-\d{2}\.json$/.test(f)).sort()
+        .map((f) => { try { return JSON.parse(fs.readFileSync(path.join(DATA, f), 'utf8')); } catch (_) { return null; } }).filter(Boolean);
+      const buf = construirHistorico(dias);
+      res.writeHead(200, { 'content-type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'content-disposition': `attachment; filename="historico_${hoyLima()}.xlsx"`, 'content-length': buf.length, 'cache-control': 'no-store' });
+      return res.end(buf);
+    }
     // --- descarga en Excel ---
     if (u.pathname.startsWith('/api/excel/')) {
       const f = path.basename(decodeURIComponent(u.pathname.split('/').pop()));
       const ruta = path.join(DATA, f);
-      if (!f.endsWith('.json') || f === 'ajustes.json' || !fs.existsSync(ruta)) return json(res, 404, { error: 'No existe ese reporte' });
+      if (!f.endsWith('.json') || interno(f) || !fs.existsSync(ruta)) return json(res, 404, { error: 'No existe ese reporte' });
       const rep = normalizar(JSON.parse(fs.readFileSync(ruta, 'utf8')));
       const nombre = f.replace(/\.json$/, '.xlsx');
       const buf = construirExcel(rep);
@@ -303,8 +373,14 @@ http.createServer(async (req, res) => {
     if (u.pathname === '/api/ajustes' && req.method === 'GET') return json(res, 200, leerAjustes());
     if (u.pathname === '/api/ajustes' && req.method === 'POST') {
       if (ses.rol !== 'admin') return json(res, 403, { error: 'Solo el administrador puede cambiar los servicios a consultar.' });
-      const { servicios } = await cuerpo(req);
+      const { servicios, capacidadPb, limpiezaDias } = await cuerpo(req);
       const a = leerAjustes();
+      if (capacidadPb) for (const [k, v] of Object.entries(capacidadPb)) {
+        if (v === '' || v == null) { delete a.capacidadPb[k]; continue; }
+        const n = Number(v); if (!Number.isInteger(n) || n < 10 || n > 80) return json(res, 400, { error: `Capacidad de ${k}: número entero entre 10 y 80.` });
+        a.capacidadPb[k] = n;
+      }
+      if (limpiezaDias != null) { const n = Number(limpiezaDias); if (!Number.isInteger(n) || n < 0 || n > 3650) return json(res, 400, { error: 'Limpieza: días entre 0 y 3650 (0 = nunca).' }); a.limpiezaDias = n; }
       for (const emp of ['cds', 'pb']) {
         const nuevo = (servicios && servicios[emp]) || {};
         for (const k of Object.keys(a.servicios[emp])) if (k in nuevo) a.servicios[emp][k] = !!nuevo[k];
@@ -320,7 +396,7 @@ http.createServer(async (req, res) => {
     if (u.pathname.startsWith('/api/admin/reportes/') && req.method === 'DELETE') {
       const f = path.basename(decodeURIComponent(u.pathname.split('/').pop()));
       const ruta = path.join(DATA, f);
-      if (!f.endsWith('.json') || f === 'ajustes.json' || !fs.existsSync(ruta)) return json(res, 404, { error: 'No existe ese reporte' });
+      if (!f.endsWith('.json') || interno(f) || !fs.existsSync(ruta)) return json(res, 404, { error: 'No existe ese reporte' });
       const dia = f.match(/^dia_(\d{4}-\d{2}-\d{2})\.json$/);
       if (dia) monitor.borrar(dia[1]); else fs.unlinkSync(ruta); // inmediato, aunque se esté actualizando
       return json(res, 200, { ok: true });
@@ -355,6 +431,15 @@ http.createServer(async (req, res) => {
           const mins = String(b.minutosAntes ?? '').split(/[,;\s]+/).filter(Boolean).map(Number);
           if (!mins.length || mins.some((x) => !Number.isInteger(x) || x < 1 || x > 600)) return json(res, 400, { error: 'Minutos antes: números enteros entre 1 y 600, separados por coma (ej. 30,20,10).' });
           C.minutosAntes = [...new Set(mins)].sort((x, y) => y - x);
+        }
+        const listaMin = (txt) => { const l = String(txt ?? '').split(/[,;\s]+/).filter(Boolean).map(Number); return l.length && l.every((x) => Number.isInteger(x) && x >= 1 && x <= 600) ? [...new Set(l)].sort((x, y) => y - x) : null; };
+        if ('minutosAntesPb' in b) {
+          if (b.minutosAntesPb == null || String(b.minutosAntesPb).trim() === '') C.minutosAntesPb = null; // igual que Cruz del Sur
+          else { const l = listaMin(b.minutosAntesPb); if (!l) return json(res, 400, { error: 'Minutos de Peru Bus: enteros entre 1 y 600 separados por coma, o vacío para usar los de Cruz del Sur.' }); C.minutosAntesPb = l; }
+        }
+        if (b.cierreMin) {
+          const c = {}; for (const k of ['cds', 'pb']) { const n = Number(b.cierreMin[k]); if (!Number.isInteger(n) || n < 0 || n > 180) return json(res, 400, { error: 'Cierre de la venta: minutos enteros entre 0 y 180.' }); c[k] = n; }
+          C.cierreMin = c;
         }
         if ('reintentos' in b) C.reintentos = Math.max(1, Math.min(10, Number(b.reintentos) || 3));
         if ('esperaReintentoSeg' in b) C.esperaReintentoSeg = Math.max(10, Math.min(600, Number(b.esperaReintentoSeg) || 60));
@@ -404,6 +489,7 @@ http.createServer(async (req, res) => {
       guardarEnv('APP_PASSWORDS', lista.filter((x) => x !== clave).join(','));
       const h = huella(clave); let cerradas = 0;
       for (const [id, s] of sesiones) if (s.huella === h && s.rol !== 'admin') { sesiones.delete(id); cerradas++; }
+      if (cerradas) guardarSesiones();
       return json(res, 200, { claves: contrasenas(), cerradas });
     }
 
@@ -422,6 +508,7 @@ http.createServer(async (req, res) => {
       let prueba;
       try { prueba = await probarToken(aProbar); } catch (e) { return json(res, 400, { error: `El token no funcionó: ${e.message}` }); }
       if (!soloProbar && nuevo) guardarEnv('CDS_TOKEN', nuevo);
+      if (!soloProbar || !nuevo) { marcarToken(true); pruebaToken.t = new Date().toISOString(); }
       return json(res, 200, { ok: true, detalle: prueba.detalle, guardado: !soloProbar && !!nuevo });
     }
 
