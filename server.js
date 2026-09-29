@@ -120,6 +120,7 @@ const ipDe = (req) => (req.headers['x-forwarded-for'] || req.socket.remoteAddres
 // ---------------- monitoreo por día (ver lib/monitor.js) ----------------
 const monitor = crearMonitor({ config, DATA, leerAjustes, guardarAjustes, registrarServicios, tokenCDS });
 const hoyLima = () => new Date(Date.now() - 5 * 36e5).toISOString().slice(0, 10);
+const sumarDias = (f, n) => { const d = new Date(`${f}T12:00:00Z`); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
 
 // Reportes del formato anterior (una sola consulta): siguen visibles en la grilla.
 function normalizar(r) {
@@ -227,9 +228,14 @@ http.createServer(async (req, res) => {
       console.log(`Pedido de actualización del ${fecha}: ${viaTxt}${que.ruta ? ` (ruta ${que.ruta})` : ''} · ${quien}`);
       try { return json(res, 200, monitor.actualizarAhora(fecha, que, ses.rol, viaTxt, quien)); } catch (e) { return json(res, 400, { error: e.message }); }
     }
-    // --- reporte al instante (pestaña /reportes): una foto del día de hoy ---
+    // --- reporte al instante (pestaña /reportes): una foto de hoy o de un día próximo ---
     if (req.method === 'POST' && u.pathname === '/api/consultar') {
       const hoy = hoyLima(); const b = await cuerpo(req);
+      const maxF = leerAjustes().reporteAuto.diasFuturo;
+      const fecha = b.fecha || hoy;
+      if (!fechaOk(fecha)) return json(res, 400, { error: 'Fecha inválida' });
+      if (fecha < hoy) return json(res, 400, { error: 'No se puede consultar un día que ya pasó.' });
+      if (fecha > sumarDias(hoy, maxF)) return json(res, 400, { error: `Solo se puede consultar hasta ${maxF} día(s) adelante.` });
       // Cada usuario puede elegir los servicios de su reporte (sin tocar la configuración global).
       let sel = null;
       if (b.servicios) {
@@ -238,7 +244,7 @@ http.createServer(async (req, res) => {
         if (!sel.cds.length && !sel.pb.length) return json(res, 400, { error: 'Elige al menos un servicio para el reporte.' });
       }
       if ((!sel || sel.cds.length) && !tokenCDS()) return json(res, 400, { error: 'Falta el token de Cruz del Sur. Agrégalo en la rueda de configuración ⚙.' });
-      return json(res, 200, { id: monitor.generarReporte(hoy, hoy, ses.rol, 'manual', null, sel).id });
+      return json(res, 200, { id: monitor.generarReporte(fecha, fecha, ses.rol, 'manual', null, sel).id });
     }
     if (u.pathname === '/api/cola') return json(res, 200, monitor.estadoCola());
     if (req.method === 'POST' && u.pathname === '/api/cancelar') {
@@ -276,7 +282,8 @@ http.createServer(async (req, res) => {
     if (u.pathname === '/api/config') {
       const M = leerAjustes().monitor;
       return json(res, 200, { hoy: hoyLima(), enCurso: { monitor: monitor.trabajoActivo('monitor'), reporte: monitor.trabajoActivo('reporte') }, rol: ses.rol,
-        monitor: ses.rol === 'admin' ? M : { activa: M.activa, perpetuo: M.perpetuo, actualizarSalidas: M.actualizarSalidas, hora: M.hora, minutosAntes: M.minutosAntes, vigDesde: M.vigDesde, vigHasta: M.vigHasta },
+        monitor: ses.rol === 'admin' ? M : { activa: M.activa, perpetuo: M.perpetuo, actualizarSalidas: M.actualizarSalidas, hora: M.hora, minutosAntes: M.minutosAntes, vigDesde: M.vigDesde, vigHasta: M.vigHasta,
+          diasAdelante: M.diasAdelante, refrescoFuturoHoras: M.refrescoFuturoHoras, refrescoFuturoMaxHoras: M.refrescoFuturoMaxHoras, refrescoHoyHoras: M.refrescoHoyHoras, refrescoHoyMaxHoras: M.refrescoHoyMaxHoras },
         reporteAuto: (({ hechas, ...R }) => R)(leerAjustes().reporteAuto) });
     }
 
@@ -351,10 +358,28 @@ http.createServer(async (req, res) => {
         }
         if ('reintentos' in b) C.reintentos = Math.max(1, Math.min(10, Number(b.reintentos) || 3));
         if ('esperaReintentoSeg' in b) C.esperaReintentoSeg = Math.max(10, Math.min(600, Number(b.esperaReintentoSeg) || 60));
-      } else if ('horas' in b) {
-        const hs = [...new Set(String(b.horas || '').split(/[,;\s]+/).filter(Boolean))].sort();
-        if (!hs.length || !hs.every(horaOk)) return json(res, 400, { error: 'Horas inválidas: usa HH:MM separadas por coma (ej. 08:00, 14:00, 20:00).' });
-        C.horas = hs;
+        // Días siguientes por adelantado y rango de horas entre actualizaciones totales (mínimo 0 = nunca).
+        const LIM = { diasAdelante: [7, 'Días siguientes: número entero entre 0 y 7.'],
+          refrescoFuturoHoras: [24, 'Días siguientes: horas entre 0 y 24 (0 = nunca).'], refrescoFuturoMaxHoras: [24, 'Días siguientes: horas entre 0 y 24.'],
+          refrescoHoyHoras: [24, 'Hoy: horas entre 0 y 24 (0 = nunca).'], refrescoHoyMaxHoras: [24, 'Hoy: horas entre 0 y 24.'] };
+        for (const [k, [max, error]] of Object.entries(LIM)) if (k in b) {
+          const v = Number(b[k]);
+          if (!Number.isFinite(v) || v < 0 || v > max || (k === 'diasAdelante' && !Number.isInteger(v))) return json(res, 400, { error });
+          C[k] = v;
+        }
+        if (C.refrescoFuturoHoras && C.refrescoFuturoMaxHoras < C.refrescoFuturoHoras) return json(res, 400, { error: 'Días siguientes: el máximo de horas no puede ser menor que el mínimo.' });
+        if (C.refrescoHoyHoras && C.refrescoHoyMaxHoras < C.refrescoHoyHoras) return json(res, 400, { error: 'Hoy: el máximo de horas no puede ser menor que el mínimo.' });
+      } else {
+        if ('diasFuturo' in b) {
+          const n = Number(b.diasFuturo);
+          if (!Number.isInteger(n) || n < 0 || n > 60) return json(res, 400, { error: 'Días a futuro del reporte: número entero entre 0 y 60.' });
+          C.diasFuturo = n;
+        }
+        if ('horas' in b) {
+          const hs = [...new Set(String(b.horas || '').split(/[,;\s]+/).filter(Boolean))].sort();
+          if (!hs.length || !hs.every(horaOk)) return json(res, 400, { error: 'Horas inválidas: usa HH:MM separadas por coma (ej. 08:00, 14:00, 20:00).' });
+          C.horas = hs;
+        }
       }
       guardarAjustes(a);
       const { hechas, ...salida } = C;

@@ -8,7 +8,7 @@ Aplicación web en Node.js que **monitorea cada día de viaje**: hace un recorri
 
 La página tiene dos secciones (arriba, en la barra):
 - **⏱ Monitoreo diario** (`/`): el seguimiento automático descrito abajo.
-- **📋 Reporte al instante** (`/reportes`): pulsas **📸 Generar reporte de hoy** y obtienes la foto de ese momento, sin seguimiento. Tiene su propia lista de "Reportes guardados" y un enlace para volver al monitoreo.
+- **📋 Reporte al instante** (`/reportes`): eliges el día (hoy o hasta 7 días adelante, configurable) y pulsas **📸 Generar reporte**: obtienes la foto de ese momento, sin seguimiento. Tiene su propia lista de "Reportes guardados" y un enlace para volver al monitoreo.
 
 En las dos secciones se trabaja **solo con el día de hoy** (hora de Lima): no se elige fecha ni rango. El servidor también lo exige.
 
@@ -110,14 +110,19 @@ Cada pantalla tiene su tarjeta **⏱ Cron**, visible para todos; solo el adminis
 Cada cron se **enciende / apaga** con su interruptor y se programa con **✎ Programar horario y fechas**: hora(s) y vigencia **♾ Perpetuo** o **📅 Entre fechas** (desde / hasta, con atajos de 7 días, 30 días o resto del mes). La vigencia del monitoreo diario también limita las lecturas antes de cada salida: fuera de ella no se toma ninguna muestra automática.
 
 En ⚙ Configuración → **Monitoreo** quedan los ajustes de las lecturas:
-- **Actualizar cada salida antes de que parta:** encendido por defecto. Se configuran los **minutos antes** (por ejemplo `30,20,10`), los **reintentos** y la **espera entre reintentos**, con botones rápidos y un ejemplo en vivo.
+- **Actualizar cada salida antes de que parta:** encendido por defecto. Se configuran los **minutos antes** (por defecto `180,120,60,20`: 3 h, 2 h, 1 h y 20 min antes), los **reintentos** y la **espera entre reintentos**, con botones rápidos y un ejemplo en vivo.
+- **Días siguientes y actualización total:** cuántos días siguientes se monitorean por adelantado (por defecto 3, máx. 7), y cada cuántas horas se releen completos esos días (por defecto **entre 3 y 5 h**) y el día de hoy (por defecto **entre 4 y 5 h**). Desde el mínimo se espera un buen momento; al llegar al máximo se hace sí o sí. 0 = nunca.
+- **Reporte al instante:** hasta cuántos días adelante se puede elegir la fecha del reporte (por defecto 7).
 
 Cómo funciona:
 1. A la hora indicada el servidor crea el día de hoy y hace el **recorrido inicial**: todas las salidas de todas las rutas, de las dos empresas. Así sabe a qué hora sale cada bus.
-2. Luego, en cada ventana (30, 20, 10 min antes), actualiza **solo esa salida**. En Cruz del Sur es 1 consulta (el mapa de asientos de ese bus); si el bus aparece desde varios terminales, se actualizan todas sus apariciones. En Peru Bus se abre la página de la ruta y se toma solo esa salida.
+2. Luego, en cada ventana (180, 120, 60 y 20 min antes), actualiza **solo esa salida**. En Cruz del Sur es 1 consulta (el mapa de asientos de ese bus); si el bus aparece desde varios terminales, se actualizan todas sus apariciones. En Peru Bus se abre la página de la ruta y se toma solo esa salida.
 3. Si falla (429, sin respuesta, etc.) se reintenta hasta el número configurado, siempre antes de la hora de salida.
-4. Las ventanas que ya pasaron cuando se hizo el recorrido inicial, o cuando la salida ya partió (por ejemplo, si el servidor estuvo apagado), se marcan como omitidas.
-5. Hay dos carriles independientes que corren en paralelo: **monitoreo** (recorrido inicial y actualizaciones; las manuales van primero) y **reporte al instante**. Comparten un solo ritmo de consultas a Cruz del Sur (1 por segundo, una sola pausa ante un 429), así que correr los dos a la vez no aumenta la carga sobre la web: cada uno avanza un poco más lento. Cada pantalla muestra solo el progreso de su propio carril y “Cancelar consulta” cancela solo ese.
+4. **Días siguientes:** a la misma hora hace también el recorrido inicial de los días siguientes (por defecto 3: si hoy es lunes, se monitorean ya martes, miércoles y jueves; cada día solo se agrega el nuevo). Mientras no les llegue su día, cada 3 a 5 h reciben una **actualización total**: se releen todas sus salidas, se suman las nuevas y se dan por terminadas las que ya no aparecen. Las lecturas antes de cada salida les llegan normalmente cuando se acerca su hora (una salida de las 01:00 tiene su lectura de 3 h antes a las 22:00 del día anterior). Al llegar su día, a la hora del cron, se hace una actualización total de inicio y sigue el plan normal.
+5. **Hoy** recibe además una actualización total cada 4 a 5 h mientras queden salidas por partir.
+6. Las tareas de fondo (días siguientes y actualizaciones totales periódicas) **esperan un buen momento**: corren cuando no hay ninguna lectura programada en los próximos 10 min y van después de todo lo demás en la cola. Si no aparece un hueco, se hacen igual al cumplirse el máximo de horas (el recorrido inicial de un día siguiente, a más tardar una hora después). Mientras esperan no bloquean la pantalla ni el cambio de token.
+7. Las ventanas que ya pasaron cuando se hizo el recorrido inicial, o cuando la salida ya partió (por ejemplo, si el servidor estuvo apagado), se marcan como omitidas.
+8. Hay dos carriles independientes que corren en paralelo: **monitoreo** (recorrido inicial y actualizaciones; las manuales van primero) y **reporte al instante**. Comparten un solo ritmo de consultas a Cruz del Sur (1 por segundo, una sola pausa ante un 429), así que correr los dos a la vez no aumenta la carga sobre la web: cada uno avanza un poco más lento. Cada pantalla muestra solo el progreso de su propio carril y “Cancelar consulta” cancela solo ese.
 
 **Salidas que ya no aparecen:** si al actualizar una salida la web (Peru Bus o Cruz del Sur) ya no la muestra, se da por **terminada**: no se reintenta y no se vuelve a consultar. En la tabla aparece como "🔒 Cerró la venta" con la hora en que se detectó; se conservan los vendidos de la última lectura.
 
@@ -165,7 +170,7 @@ Los reportes de una sola consulta (los anteriores y los nuevos) están en la sec
 El Excel de un día monitoreado trae además la hoja **Actualizaciones** y, en "Salidas", la hora de la última actualización de cada salida.
 
 ## Reporte al instante
-En **📋 Reporte al instante** se genera una foto de los vendidos de hoy en ese momento. Corre en su propio carril, en paralelo con el monitoreo: no espera a que termine un recorrido o una actualización (comparten el ritmo de consultas a Cruz del Sur). Los reportes antiguos de varios días se pueden seguir abriendo desde "Reportes guardados".
+En **📋 Reporte al instante** se genera una foto de los vendidos del día elegido (hoy o un día próximo, hasta el máximo configurado en ⚙ Configuración → Monitoreo; por defecto 7 días) en ese momento. Corre en su propio carril, en paralelo con el monitoreo: no espera a que termine un recorrido o una actualización (comparten el ritmo de consultas a Cruz del Sur). Los reportes antiguos de varios días se pueden seguir abriendo desde "Reportes guardados".
 
 ## Cómo se calculan los datos
 - **Cruz del Sur:** hace la búsqueda del día y, por cada viaje, pide el mapa de asientos. Vendidos = asientos con `occupied: true`, sumando todos los pisos y tarifas.

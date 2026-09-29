@@ -22,17 +22,21 @@
     "actualizarSalidas": true,
     "hora": "03:00",
     "minutosAntes": [
-      30,
-      20,
-      10,
-      2
+      180,
+      120,
+      60,
+      20
     ],
     "reintentos": 3,
     "esperaReintentoSeg": 20,
     "vigDesde": "2026-09-28",
     "vigHasta": "2026-10-28",
     "ultima": null,
-    "ultimoResultado": null
+    "ultimoResultado": null,
+    "refrescoFuturoHoras": 3,
+    "refrescoFuturoMaxHoras": 5,
+    "refrescoHoyHoras": 4,
+    "refrescoHoyMaxHoras": 5
   },
   "reporteAuto": {
     "activa": false,

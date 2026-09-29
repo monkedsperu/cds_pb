@@ -209,6 +209,9 @@
   .cfgcab{display:flex;gap:12px;align-items:flex-start}
   .icono-sec{width:46px;flex:none;text-align:center;font-size:22px;line-height:26px}
   .cfgcuerpo{margin-top:6px;padding-left:58px}
+  .frases .frase{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:8px 0;font-size:14px}
+  .frases .frase input{width:64px;text-align:center;font:inherit;font-weight:700;padding:6px;border:1px solid var(--line);border-radius:8px}
+  .frases .frase .ayuda{margin:0}
   @media (max-width:560px){.cfgcuerpo{padding-left:0}}
   .toggle{position:relative;display:inline-block;width:46px;height:26px;flex:none;cursor:pointer}
   .toggle input{opacity:0;width:0;height:0}
@@ -285,10 +288,11 @@
     <a class="volver solorep" href="/">← Volver al monitoreo diario</a>
     <div class="controles">
       <!-- monitoreo diario -->
-      <div class="campo diahoy">Día de viaje<b id="diaHoy"></b></div>
+      <div class="campo diahoy solomon">Día de viaje<b id="diaHoy"></b></div>
+      <label class="campo diahoy solorep">Día de viaje<input type="date" id="repFecha" title="Hoy o un día próximo"></label>
       <button class="btn-main btn-grande solomon" id="btnIniciar" title="Hace el recorrido inicial del día y empieza a monitorearlo">▶ Iniciar monitoreo</button>
       <!-- reporte al instante -->
-      <button class="btn-main btn-grande solorep" id="btnGenerar">📸 Generar reporte de hoy</button>
+      <button class="btn-main btn-grande solorep" id="btnGenerar">📸 Generar reporte</button>
       <!-- descargas -->
       <button class="btn-sec soloadminb oculto" id="btnCsv" disabled>Exportar CSV</button>
       <button class="btn-sec" id="btnExcel" disabled>⬇ Descargar Excel</button>
@@ -296,7 +300,7 @@
     </div>
     <div class="cron" id="cron"></div>
     <div class="selserv" id="selServ"></div>
-    <p class="ayuda solorep">Toma una foto de los vendidos de hoy <b>en este momento</b>, sin seguimiento posterior. Para el seguimiento automático antes de cada salida usa el <a href="/">monitoreo diario</a>.</p>
+    <p class="ayuda solorep">Toma una foto de los vendidos del día elegido (hoy o hasta <b id="repMaxDias">7</b> días adelante) <b>en este momento</b>, sin seguimiento posterior. Para el seguimiento automático antes de cada salida usa el <a href="/">monitoreo diario</a>.</p>
     <div id="progreso" class="oculto">
       <div class="pbar"><i id="pfill"></i></div>
       <div class="pinfo"><span id="ppaso">Iniciando…</span><b id="ppct">0%</b></div>
@@ -367,13 +371,26 @@
         <div><b>Actualizar cada salida antes de que parta</b><div class="ayuda" style="margin:2px 0 0">Para todos los días monitoreados dentro de la vigencia del cron del monitoreo (automáticos o iniciados a mano). Al partir la última salida, el día queda <b>COMPLETADO</b> y no se consulta más.</div></div></div>
       <div class="cfgcuerpo">
         <div class="autogrid">
-          <label class="campo">Minutos antes de cada salida<input type="text" id="autoMins" placeholder="30,20,10" style="width:150px"></label>
+          <label class="campo">Minutos antes de cada salida<input type="text" id="autoMins" placeholder="180,120,60,20" style="width:150px"></label>
           <label class="campo">Reintentos si falla<input type="number" id="autoReint" min="1" max="10" style="width:110px"></label>
           <label class="campo">Espera entre reintentos (seg)<input type="number" id="autoEspera" min="10" max="600" style="width:110px"></label>
         </div>
-        <div class="presets"><span class="ayuda" style="margin:0">Rápido:</span><button data-mins="30,20,10">30 · 20 · 10</button><button data-mins="60,30,15,5">60 · 30 · 15 · 5</button><button data-mins="20,10">20 · 10</button><button data-mins="15">15</button></div>
+        <div class="presets"><span class="ayuda" style="margin:0">Rápido:</span><button data-mins="180,120,60,20">3 h · 2 h · 1 h · 20 min</button><button data-mins="30,20,10">30 · 20 · 10</button><button data-mins="60,30,15,5">60 · 30 · 15 · 5</button><button data-mins="20,10">20 · 10</button><button data-mins="15">15</button></div>
         <div class="vigprev" id="minsPrev"></div>
       </div>
+    </div>
+    <div class="cfgsec">
+      <div><b>📆 Días siguientes (monitoreo por adelantado)</b><div class="ayuda" style="margin:2px 0 0">Una <b>actualización completa</b> vuelve a leer <b>todas</b> las salidas del día (y suma las nuevas). No es a hora fija: desde el mínimo de horas se espera un buen momento (sin lecturas de salidas cercanas); si no llega, se hace igual al cumplirse el máximo.</div></div>
+      <div class="cfgcuerpo frases" style="padding-left:0">
+        <div class="frase">1. Además de hoy, monitorear los próximos <input type="number" id="autoAdel" min="0" max="7"> días <span class="ayuda">(0 = no)</span></div>
+        <div class="frase">2. Esos días, hasta que llegue su fecha: actualización completa cada <input type="number" id="autoRefFut" min="0" max="24" step="0.5"> a <input type="number" id="autoRefFutMax" min="0" max="24" step="0.5"> horas <span class="ayuda">(0 = no)</span></div>
+        <div class="frase">3. El día de hoy: actualización completa cada <input type="number" id="autoRefHoy" min="0" max="24" step="0.5"> a <input type="number" id="autoRefHoyMax" min="0" max="24" step="0.5"> horas <span class="ayuda">(0 = no; es aparte de las lecturas antes de cada salida)</span></div>
+        <div class="vigprev" id="adelPrev"></div>
+      </div>
+    </div>
+    <div class="cfgsec">
+      <div><b>Reporte al instante</b><div class="ayuda" style="margin:2px 0 0">Hasta cuántos días adelante se puede elegir la fecha del reporte (0 = solo hoy).</div></div>
+      <div class="cfgcuerpo frases" style="padding-left:0"><div class="frase">Permitir elegir hasta <input type="number" id="autoRepFut" min="0" max="60"> días adelante <span class="ayuda">(0 = solo hoy)</span></div></div>
     </div>
     <div class="estado-token" id="autoEstado"></div>
     <div id="msgAuto" class="msg"></div>
@@ -405,7 +422,7 @@ $(MODO==='monitor' ? '#navMon' : '#navRep').classList.add('on');
 $('#histTitulo').textContent = MODO==='monitor' ? 'Días monitoreados' : 'Reportes guardados';
 $('#reporte').innerHTML = MODO==='monitor'
   ? '<div class="card vacio">Pulsa <b>▶ Iniciar monitoreo</b> para monitorear hoy, o abre un día de la lista.</div>'
-  : '<div class="card vacio">Pulsa <b>📸 Generar reporte de hoy</b>, o abre un reporte guardado.</div>';
+  : '<div class="card vacio">Elige el día y pulsa <b>📸 Generar reporte</b>, o abre un reporte guardado.</div>';
 
 const DIAS = ['dom','lun','mar','mié','jue','vie','sáb'];
 const DIAS_L = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
@@ -424,8 +441,17 @@ const EMP = {cds:'Cruz del Sur', pb:'Peru Bus'};
 const pillEmp = e => e ? `<span class="pill ${e}">${e==='cds'?'CDS':'PB'}</span>` : '';
 
 // ---------------- controles ----------------
-// Siempre se trabaja con el día de hoy (hora de Lima).
-const pintarHoy = () => { $('#diaHoy').textContent = 'Hoy · ' + fLarga(hoyLima()); };
+// El monitoreo se inicia siempre con el día de hoy (hora de Lima); el reporte al instante puede ser de hoy o de un día próximo.
+const maxDiasRep = () => RAUTO && RAUTO.diasFuturo != null ? RAUTO.diasFuturo : 7;
+const pintarHoy = () => {
+  $('#diaHoy').textContent = 'Hoy · ' + fLarga(hoyLima());
+  const i = $('#repFecha'), hoy = hoyLima(), max = sumarDias(hoy, maxDiasRep());
+  i.min = hoy; i.max = max; if(!i.value || i.value < hoy) i.value = hoy; if(i.value > max) i.value = max;
+  $('#repMaxDias').textContent = maxDiasRep(); pintarBtnGenerar();
+};
+const fechaRep = () => $('#repFecha').value || hoyLima();
+function pintarBtnGenerar(){ const b = $('#btnGenerar'); if(b.textContent !== 'Consultando…') b.textContent = TXT_PRINCIPAL(); }
+$('#repFecha').onchange = () => pintarHoy();
 $('#verLog').onclick = () => $('#log').classList.toggle('oculto');
 // Confirmación propia: no depende del confirm() del navegador (que puede quedar bloqueado en silencio).
 function preguntar({ titulo, texto, si = 'Confirmar', no = 'Cancelar', peligro = false }){
@@ -479,6 +505,10 @@ const idsFuturas = (ruta) => !rep ? [] : rep.dias[0].rutas.filter(r=>!ruta || r.
 // ---------------- cron de cada pantalla (monitoreo diario / reporte al instante) ----------------
 const diasEntre = (desde, hasta) => { const out=[]; for(let f=desde; f<=hasta && out.length<400; f=sumarDias(f,1)) out.push(f); return out; };
 const fAnio = f => `${fCorta(f)}/${f.slice(0,4)}`;
+const enDias = f => { const n = diasEntre(hoyLima(), f).length - 1; return n === 1 ? 'mañana' : `en ${n} días`; };
+// Próxima actualización total de un día: {t, horas} o {enCola}. Es aproximada: espera un buen momento.
+const txtRefresco = p => p.enCola ? '<b>↻ total</b><small>esperando un buen momento</small>'
+  : `<b>↻ total ${hm(p.t)}–${hm(p.hasta)}</b><small>${Date.parse(p.t) <= Date.now() ? 'en cuanto haya un buen momento' : enMin(Date.parse(p.t))} · cada ${p.min} a ${p.max} h</small>`;
 function chipsDias(desde, hasta){
   const l = diasEntre(desde, hasta); if(!l.length || l.length > 62) return '';
   const hoy = hoyLima(), hechos = new Set(HIST.map(m=>m.fecha||m.desde));
@@ -505,6 +535,7 @@ function pintarCron(){
   if(!C.perpetuo && C.vigHasta && !fin) h += chipsDias(C.vigDesde && C.vigDesde > hoy ? C.vigDesde : (C.vigDesde || hoy), C.vigHasta);
   if(mon){
     h += `<div>${C.actualizarSalidas===false ? '⏸ Las actualizaciones antes de cada salida están apagadas.' : `⏱ Cada salida se actualiza <b>${(C.minutosAntes||[]).join(', ')} min</b> antes de partir (dentro de la vigencia). Cuando parte la última, el día queda <b>COMPLETADO</b>.`}</div>`;
+    h += `<div>📆 ${C.diasAdelante ? `Al iniciar cada día también monitorea por adelantado los <b>${C.diasAdelante}</b> día(s) siguientes${C.refrescoFuturoHoras ? `, releyéndolos completos cada <b>${C.refrescoFuturoHoras} a ${C.refrescoFuturoMaxHoras} h</b> hasta que llegue su día` : ''}.` : 'No monitorea días siguientes por adelantado.'}${C.refrescoHoyHoras ? ` Hoy se relee completo cada <b>${C.refrescoHoyHoras} a ${C.refrescoHoyMaxHoras} h</b>.` : ''}</div>`;
     const ya = HIST.find(m=>m.fecha===hoy);
     h += `<div class="pista">${!enVig(C, hoy) ? '⚠ Hoy está <b>fuera de la vigencia</b>: no se toman muestras automáticas; solo se puede actualizar a mano.'
       : ya ? `ℹ Hoy ya se está monitoreando${ya.completado?' (COMPLETADO)':ya.detenido?' (DETENIDO)':''}: “Iniciar monitoreo” te dará la opción de verlo o forzar su actualización.`
@@ -582,12 +613,12 @@ function pintarSelServ(){
 cargarSelServ();
 $('#btnGenerar').onclick = async () => {
   if(SEL_REP && !(SEL_REP.cds.length + SEL_REP.pb.length)) return alert('Elige al menos un servicio.');
-  const r = await post('/api/consultar', SEL_REP ? { servicios: SEL_REP } : {}); const j = await r.json();
+  const r = await post('/api/consultar', { fecha: fechaRep(), ...(SEL_REP ? { servicios: SEL_REP } : {}) }); const j = await r.json();
   if(!r.ok) return alert(j.error);
   seguir(j.id);
 };
 const BTN_PRINCIPAL = () => MODO==='monitor' ? $('#btnIniciar') : $('#btnGenerar');
-const TXT_PRINCIPAL = () => MODO==='monitor' ? '▶ Iniciar monitoreo' : '📸 Generar reporte de hoy';
+const TXT_PRINCIPAL = () => MODO==='monitor' ? '▶ Iniciar monitoreo' : `📸 Generar reporte ${fechaRep()===hoyLima() ? 'de hoy' : 'del ' + fCorta(fechaRep())}`;
 function seguir(id){
   BTN_PRINCIPAL().disabled = true; BTN_PRINCIPAL().textContent = 'Consultando…';
   $('#progreso').classList.remove('oculto');
@@ -599,7 +630,8 @@ function seguir(id){
     BTN_PRINCIPAL().disabled=false; BTN_PRINCIPAL().textContent=TXT_PRINCIPAL();
     if(e.estado==='listo'){
       // Solo se abre el resultado si es de esta sección (el progreso puede venir de la otra).
-      if(e.fecha && MODO==='monitor') abrir(`dia_${e.fecha}.json`);
+      // Las tareas automáticas (días siguientes, actualización total) no cambian el día que se está viendo.
+      if(e.fecha && MODO==='monitor' && (!rep || rep.fecha===e.fecha || (e.fecha===hoyLima() && /^Recorrido inicial/.test(e.desc||'')))) abrir(`dia_${e.fecha}.json`);
       else if(e.resultado && e.resultado.archivo && MODO==='reportes') abrir(e.resultado.archivo);
       cargarHistorial(); setTimeout(()=>$('#progreso').classList.add('oculto'),1500);
     } else { $('#ppaso').textContent = 'Error: '+e.error; $('#log').classList.remove('oculto'); }
@@ -637,6 +669,7 @@ function alcanceAct(a){
 }
 function tagAct(a){
   if(a.tipo==='inicial') return '<span class="tagt ini">Recorrido inicial</span>';
+  if(a.tipo==='refresco') return `<span class="tagt auto">↻ Actualización total${a.motivo?` · ${esc(a.motivo)}`:''}</span>`;
   if(a.tipo==='fin') return '<span class="tagt fin">✔ COMPLETADO</span>';
   if(a.tipo==='detenido') return '<span class="tagt det">⏹ Detenido · admin</span>';
   if(a.tipo==='reanudado') return '<span class="tagt admin">▶ Reanudado · admin</span>';
@@ -682,11 +715,11 @@ function pintarHist(){
     const vend = `<td class="cds"><span class="num">${m.vendidos?m.vendidos.cds:''}</span></td><td class="pb"><span class="num">${m.vendidos?m.vendidos.pb:''}</span></td>`;
     h += `<tr class="fila ${abierto?'abierto':''} ${exp?'exp':''}" data-exp="${esc(m.archivo)}" title="Clic para ${exp?'ocultar':'ver'} ${mon?'las actualizaciones':'el detalle'}">
       <td style="white-space:nowrap"><span class="flechita">${exp?'▾':'▸'}</span> <button class="btn-ver" data-ver="${esc(m.archivo)}" title="Abrir ${mon?'el día':'el reporte'}">📊 Ver</button></td>` +
-      (mon ? `<td style="text-align:left"><b>${viaje}</b>${m.desde===hoyLima()?' <span class="tagt manual">hoy</span>':''}</td>
+      (mon ? `<td style="text-align:left"><b>${viaje}</b>${m.desde===hoyLima()?' <span class="tagt manual">hoy</span>':m.desde>hoyLima()?` <span class="tagt auto" title="Se monitorea por adelantado">${enDias(m.desde)}</span>`:''}</td>
       <td>${tagOrigen(m)}</td><td>${fh(m.creado)}</td>
       <td>${m.act ? `<span class="ok-t">✔ ${m.act.ok}</span>${m.act.error?` · <span class="err-t">✖ ${m.act.error}</span>`:''}` : ''}</td>
       <td>${m.ultima ? hm(m.ultima) : ''}</td>
-      <td class="prox">${m.completado ? '<span class="tagt fin">✔ COMPLETADO</span>' : m.detenido ? '<span class="tagt det">⏹ DETENIDO</span>' : m.proxima ? `<b>${hm(m.proxima.t)}</b><small>${m.proxima.hora} ${EMP[m.proxima.emp]||''} · ${enMin(Date.parse(m.proxima.t))}</small>` : '<span class="ayuda">—</span>'}${!m.completado && !m.detenido && m.total ? `<small>quedan ${m.quedan} de ${m.total}</small>` : ''}</td>${svc}${vend}`
+      <td class="prox">${m.completado ? '<span class="tagt fin">✔ COMPLETADO</span>' : m.detenido ? '<span class="tagt det">⏹ DETENIDO</span>' : m.desde>hoyLima() && m.proxRefresco ? txtRefresco(m.proxRefresco) : m.proxima ? `<b>${hm(m.proxima.t)}</b><small>${m.proxima.hora} ${EMP[m.proxima.emp]||''} · ${enMin(Date.parse(m.proxima.t))}</small>` : '<span class="ayuda">—</span>'}${!m.completado && !m.detenido && m.total ? `<small>quedan ${m.quedan} de ${m.total}</small>` : ''}</td>${svc}${vend}`
       : `<td>${tagOrigen(m)}</td><td>${fh(m.generado)}</td><td><b>${viaje}</b></td><td>${m.dias??''}</td>${svc}${vend}
       <td>${m.sinDato ? `<span class="sindato">${m.sinDato}</span>` : '<span class="ayuda">0</span>'}</td>`) + borrar + '</tr>';
     if(exp) h += `<tr class="det"><td></td><td colspan="${cols-1}">${mon ? tablaActs(detCache[m.archivo]) :
@@ -852,6 +885,7 @@ function avisarNuevas(r){
   const n = r.actualizaciones.length, prev = vistos[r.fecha]; vistos[r.fecha] = n;
   if(prev == null || n <= prev) return;
   const nuevas = r.actualizaciones.slice(prev).filter(a=>a.id);
+  r.actualizaciones.slice(prev).filter(a=>a.tipo==='refresco').forEach(a=>toast(`<h4>↻ Actualización total</h4><div class="linea">${esc(a.detalle)}</div><div class="meta">${fLarga(r.fecha)} · ${hm(a.t)}</div>`, a.ok ? 'info' : 'err'));
   r.actualizaciones.slice(prev).filter(a=>a.tipo==='fin').forEach(a=>toast(`<h4>🏁 Monitoreo COMPLETADO</h4><div class="linea">${esc(a.detalle)}</div><div class="meta">${fLarga(r.fecha)} · ${hm(a.t)}</div>`, 'fin'));
   const lotes = {}; nuevas.forEach(a=>{ (lotes[a.lote] = lotes[a.lote] || []).push(a); });
   Object.values(lotes).forEach(l => {
@@ -987,9 +1021,12 @@ $('#btnAgregarClave').onclick = async () => {
 };
 $('#btnGenClave').onclick = () => { const a='abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789'; const v=new Uint32Array(10); crypto.getRandomValues(v); $('#nuevaClave').value=[...v].map(x=>a[x%a.length]).join(''); };
 function pintarAuto(){
-  const a = MON || {actualizarSalidas:true,minutosAntes:[30,20,10],reintentos:3,esperaReintentoSeg:60};
+  const a = MON || {actualizarSalidas:true,minutosAntes:[180,120,60,20],reintentos:3,esperaReintentoSeg:60,diasAdelante:3,refrescoFuturoHoras:3,refrescoFuturoMaxHoras:5,refrescoHoyHoras:4,refrescoHoyMaxHoras:5};
   $('#autoActSal').checked = a.actualizarSalidas !== false; $('#autoMins').value = (a.minutosAntes||[]).join(',');
   $('#autoReint').value = a.reintentos; $('#autoEspera').value = a.esperaReintentoSeg;
+  $('#autoAdel').value = a.diasAdelante ?? 3; $('#autoRefFut').value = a.refrescoFuturoHoras ?? 3; $('#autoRefFutMax').value = a.refrescoFuturoMaxHoras ?? 5;
+  $('#autoRefHoy').value = a.refrescoHoyHoras ?? 4; $('#autoRefHoyMax').value = a.refrescoHoyMaxHoras ?? 5;
+  $('#autoRepFut').value = maxDiasRep();
   $('#autoEstado').className = 'estado-token';
   $('#autoEstado').innerHTML = `Cron del monitoreo diario: <b>${a.activa?'encendido':'apagado'}</b> · vigencia ${textoPeriodo(a)}. Se cambia en la pantalla Monitoreo diario.`;
   prevAuto(); msg('#msgAuto','');
@@ -999,13 +1036,23 @@ function prevAuto(){
   const mins = $('#autoMins').value.split(/[,;\s]+/).filter(Boolean).map(Number);
   if(!mins.length || !mins.every(m=>Number.isInteger(m) && m>=1 && m<=600)){ $('#minsPrev').innerHTML = '<span class="err-t">Escribe minutos enteros entre 1 y 600, separados por coma (por ejemplo 30,20,10).</span>'; return; }
   const ms = [...new Set(mins)].sort((a,b)=>b-a), base = 15*60, hh = x => `${String(Math.floor(x/60)).padStart(2,'0')}:${String(x%60).padStart(2,'0')}`;
+  const v = id => Number($(id).value)||0, nA = v('#autoAdel'), rf = v('#autoRefFut'), rfM = v('#autoRefFutMax'), rh = v('#autoRefHoy'), rhM = v('#autoRefHoyMax');
+  const hoy = hoyLima(), dias = Array.from({length:nA}, (_,i)=>fCorta(sumarDias(hoy,i+1)));
+  $('#adelPrev').innerHTML = (rf && rfM < rf) || (rh && rhM < rh) ? '<span class="err-t">El segundo número de horas (máximo) no puede ser menor que el primero (mínimo).</span>'
+    : (nA ? `Ejemplo, si hoy es ${fCorta(hoy)}: también se monitorean <b>${dias.join(', ')}</b>${rf ? `, y cada uno se relee completo cada <b>${rf} a ${rfM} h</b> hasta que llegue su día` : ', sin releerlos hasta que llegue su día'}.` : 'Solo se monitorea el día de hoy.')
+    + ` Hoy se relee completo ${rh ? `cada <b>${rh} a ${rhM} h</b>` : '<b>nunca</b>'}, además de las lecturas antes de cada salida.`;
   $('#minsPrev').innerHTML = `Ejemplo: una salida de las <b>15:00</b> se lee a las ${ms.map(m=>`<b>${hh(base-m)}</b>`).join(', ')} (${ms.length} lectura${ms.length>1?'s':''}, además del recorrido inicial). Si una lectura falla, se reintenta hasta <b>${$('#autoReint').value||3}</b> veces cada <b>${$('#autoEspera').value||60} s</b>, siempre antes de que parta.`;
 }
-['#autoActSal','#autoMins','#autoReint','#autoEspera'].forEach(id=>{ $(id).addEventListener('input', prevAuto); $(id).addEventListener('change', prevAuto); });
+['#autoActSal','#autoMins','#autoReint','#autoEspera','#autoAdel','#autoRefFut','#autoRefFutMax','#autoRefHoy','#autoRefHoyMax'].forEach(id=>{ $(id).addEventListener('input', prevAuto); $(id).addEventListener('change', prevAuto); });
 $$('[data-mins]').forEach(b=>b.onclick=()=>{ $('#autoMins').value = b.dataset.mins; prevAuto(); });
 $('#btnGuardarAuto').onclick = async () => {
-  const r = await post('/api/admin/monitor',{actualizarSalidas:$('#autoActSal').checked,minutosAntes:$('#autoMins').value,reintentos:Number($('#autoReint').value),esperaReintentoSeg:Number($('#autoEspera').value)});
-  const j = await r.json(); if(r.ok){ MON=j; pintarAuto(); pintarCron(); if(rep) pintar(); msg('#msgAuto','✔ Guardado.',true); } else msg('#msgAuto',j.error,false);
+  const r = await post('/api/admin/monitor',{actualizarSalidas:$('#autoActSal').checked,minutosAntes:$('#autoMins').value,reintentos:Number($('#autoReint').value),esperaReintentoSeg:Number($('#autoEspera').value),
+    diasAdelante:Number($('#autoAdel').value),refrescoFuturoHoras:Number($('#autoRefFut').value),refrescoFuturoMaxHoras:Number($('#autoRefFutMax').value),refrescoHoyHoras:Number($('#autoRefHoy').value),refrescoHoyMaxHoras:Number($('#autoRefHoyMax').value)});
+  const j = await r.json(); if(!r.ok) return msg('#msgAuto',j.error,false);
+  MON=j;
+  const r2 = await post('/api/admin/reporte-auto',{diasFuturo:Number($('#autoRepFut').value)}); const j2 = await r2.json();
+  if(!r2.ok) return msg('#msgAuto',j2.error,false);
+  RAUTO=j2; pintarHoy(); pintarAuto(); pintarCron(); if(rep) pintar(); msg('#msgAuto','✔ Guardado.',true);
 };
 
 // ---------------- tooltip ----------------
@@ -1199,9 +1246,13 @@ function cabeceraDia(){
     : pend ? `⏳ ${pend} salida(s) en cola`
     : rep.proxima ? `Próxima actualización programada: <b>${hm(rep.proxima.t)}</b> (${enMin(Date.parse(rep.proxima.t))}) · salida ${rep.proxima.hora} ${pillEmp(rep.proxima.emp)} ${esc(rep.proxima.servicio)}, ${rep.proxima.m} min antes`
     : (MON&&MON.actualizarSalidas !== false ? 'No quedan actualizaciones programadas para este día.' : 'Actualizaciones antes de cada salida desactivadas (⚙ Configuración → Monitoreo).');
+  const futuro = rep.fecha > hoyLima(), pr = rep.proxRefresco;
+  const total = !pr ? '' : pr.enCola ? ' · ↻ actualización total en cola (esperando un buen momento)'
+    : ` · ↻ próxima actualización completa entre <b>${hm(pr.t)}</b> y <b>${hm(pr.hasta)}</b> (${Date.parse(pr.t) <= Date.now() ? 'en cuanto haya un buen momento' : enMin(Date.parse(pr.t))}; cada ${pr.min} a ${pr.max} h)`;
+  const aviso = futuro ? `<div class="pista" style="margin-top:6px">📆 Día siguiente (${enDias(rep.fecha)}): se monitorea por adelantado. Hasta que llegue su día se relee completo periódicamente; luego sigue las lecturas antes de cada salida.</div>` : '';
   const pie = rep.completado ? `<div class="finbar">✔ <b>Monitoreo COMPLETADO</b> el ${fh(rep.completado)}: ya no quedan salidas por partir. No se consulta nada más; los datos quedan como registro final.</div>`
     : rep.detenido ? `<div class="detbar">⏹ <b>Actualizaciones DETENIDAS</b> por el administrador el ${fh(rep.detenido)}. No se consulta nada hasta que se reanude.</div>`
-    : `<div class="monbar"><button class="btn-main btn-grande" id="btnActTodas" ${quedan?'':'disabled'} title="Actualiza ahora todas las salidas que aún no parten, en las dos rutas">↻ Actualizar ahora todos los horarios</button><span class="estado">${estado}</span></div>`;
+    : `<div class="monbar"><button class="btn-main btn-grande" id="btnActTodas" ${quedan?'':'disabled'} title="Actualiza ahora todas las salidas que aún no parten, en las dos rutas">↻ Actualizar ahora todos los horarios</button><span class="estado">${estado}${total}</span></div>${aviso}`;
   const adm = ROL!=='admin' ? '' : `<span class="admbar">${rep.completado ? '' : rep.detenido ? '<button class="btn-adm" id="admReanudar">▶ Reanudar actualizaciones</button>' : '<button class="btn-adm" id="admDetener">⏹ Detener actualizaciones</button>'}<button class="btn-adm peligro" id="admBorrar">🗑 Eliminar día</button></span>`;
   return `<div class="card"><div class="seccab"><h3 class="sec">Monitoreo del ${fLarga(rep.fecha)}</h3>${tagOrigen(rep)}${rep.completado?'<span class="tagt fin">✔ COMPLETADO</span>':''}${rep.detenido?'<span class="tagt det">⏹ DETENIDO</span>':''}${adm}</div>
     <div class="ayuda" style="margin:0">Recorrido inicial ${fh(rep.creado)}${ult?` · última actualización <b>${hm(ult.t)}</b>`:''} · ${rep.completado ? `${todas.length} salidas registradas` : `${quedan} de ${todas.length} salidas aún no parten`}${nCerr ? ` · 🔒 ${nCerr} cerraron la venta` : ''}</div>${bloqueServicios(rep.servicios)}
